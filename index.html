@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملف مفتوح — لعبة تحقيق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- خلفية زخرفية ثابتة -->
+<div class="paper-texture"></div>
+
+<!-- ============ شاشة البداية ============ -->
+<section id="screen-start" class="screen active">
+  <div class="start-wrap">
+    <div class="case-stamp">سرّي</div>
+    <h1 class="game-title">ملف <span>مفتوح</span></h1>
+    <p class="game-subtitle">قسم التحقيقات الجنائية — الجمهورية العربية السورية</p>
+    <div class="start-actions">
+      <button class="btn btn-primary" id="btn-continue">متابعة التحقيق</button>
+      <button class="btn btn-secondary" id="btn-newgame">قضية جديدة</button>
+      <button class="btn btn-ghost" id="btn-reset">مسح التقدّم</button>
+    </div>
+    <p class="start-hint" id="save-hint"></p>
+  </div>
+</section>
+
+<!-- ============ شاشة مقدمة القضية ============ -->
+<section id="screen-caseintro" class="screen">
+  <div class="intro-wrap">
+    <div class="file-tab">ملف رقم 1147 — سري</div>
+    <h2 id="intro-title"></h2>
+    <p id="intro-body" class="intro-text"></p>
+    <div class="intro-victim" id="intro-victim"></div>
+    <button class="btn btn-primary" id="btn-start-investigation">بدء التحقيق</button>
+  </div>
+</section>
+
+<!-- ============ الهيكل الرئيسي للعبة (مكتب التحقيق) ============ -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand">ملف مفتوح</span>
+      <span class="case-id">القضية #1147</span>
+    </div>
+    <div class="topbar-stats" id="topbar-stats"></div>
+  </header>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-tab="hub">🗂️ المكتب</button>
+    <button class="tab-btn" data-tab="scene">🏠 مسرح الجريمة</button>
+    <button class="tab-btn" data-tab="locations">📍 مواقع أخرى</button>
+    <button class="tab-btn" data-tab="board">📌 لوحة الأدلة</button>
+    <button class="tab-btn" data-tab="suspects">🕵️ المشتبه بهم</button>
+    <button class="tab-btn" data-tab="timeline">⏱️ الخط الزمني</button>
+    <button class="tab-btn" data-tab="ai">🤖 مساعد التحقيق</button>
+    <button class="tab-btn tab-accuse" data-tab="accuse">⚖️ إغلاق القضية</button>
+  </nav>
+
+  <main class="tab-content" id="tab-content">
+    <!-- المحتوى يُبنى ديناميكياً بواسطة JS -->
+  </main>
+</section>
+
+<!-- ============ شاشة النهاية ============ -->
+<section id="screen-end" class="screen">
+  <div class="end-wrap" id="end-wrap"></div>
+</section>
+
+<!-- ============ نافذة منبثقة عامة ============ -->
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<!-- ============ إشعار عابر ============ -->
+<div id="toast" class="toast"></div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

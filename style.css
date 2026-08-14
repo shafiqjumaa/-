@@ -1,0 +1,357 @@
+/* ==========================================================
+   ملف مفتوح — الأنماط العامة
+   نظام ألوان: خلفية داكنة (فحمي) + أخضر زيتوني + ذهبي نحاسي
+   خط عرض: Cairo (عناوين) / Tajawal (نص) / IBM Plex Mono (بيانات)
+   ========================================================== */
+
+:root{
+  --bg-0: #101310;
+  --bg-1: #171b17;
+  --bg-2: #1e231e;
+  --bg-card: #1b201c;
+  --line: rgba(201, 178, 122, 0.14);
+  --line-strong: rgba(201, 178, 122, 0.32);
+  --text-0: #ece7d9;
+  --text-1: #b9b6a8;
+  --text-2: #82806f;
+  --olive: #6b8e63;
+  --olive-dim: #4d6947;
+  --brass: #c9a15a;
+  --brass-bright: #e0be7c;
+  --red: #b4483c;
+  --red-bright: #d15c4e;
+  --shadow: 0 10px 30px rgba(0,0,0,0.45);
+  --radius: 10px;
+  --font-display: 'Cairo', 'Tajawal', sans-serif;
+  --font-body: 'Tajawal', 'Cairo', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  overflow-x:hidden;
+  position:relative;
+}
+
+::selection{ background: var(--brass); color:#161616; }
+
+/* نسيج ورقي خفيف في الخلفية */
+.paper-texture{
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(201,178,122,0.05), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(107,142,99,0.06), transparent 45%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.008) 0px, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px);
+}
+
+/* زخرفة هندسية عربية بسيطة كخط علوي */
+.geo-divider{
+  height:6px;
+  background: repeating-linear-gradient(135deg, var(--brass) 0 8px, transparent 8px 16px);
+  opacity:0.5;
+}
+
+button{ font-family:inherit; cursor:pointer; }
+h1,h2,h3,h4{ font-family: var(--font-display); margin:0; }
+
+/* ---------------- الأزرار ---------------- */
+.btn{
+  border:1px solid var(--line-strong);
+  background: var(--bg-2);
+  color: var(--text-0);
+  padding: 13px 26px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  transition: all .18s ease;
+  font-family: var(--font-display);
+}
+.btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn:active{ transform: translateY(0); }
+.btn-primary{ background: linear-gradient(135deg, var(--olive), var(--olive-dim)); border-color: var(--olive); color:#f3f1e6; }
+.btn-secondary{ background: var(--bg-card); border-color: var(--brass); color: var(--brass-bright); }
+.btn-ghost{ background:transparent; border-color: var(--line); color: var(--text-2); font-weight:400; }
+.btn-danger{ background: linear-gradient(135deg, var(--red-bright), var(--red)); border-color: var(--red); color:#fff0ec; }
+.btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+.btn-sm{ padding:8px 14px; font-size:13px; }
+
+/* ---------------- الشاشات ---------------- */
+.screen{ display:none; min-height:100vh; position:relative; z-index:1; }
+.screen.active{ display:block; animation: fadeIn .4s ease; }
+@keyframes fadeIn{ from{opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ---------------- شاشة البداية ---------------- */
+#screen-start{ display:flex; align-items:center; justify-content:center; }
+.start-wrap{ text-align:center; max-width:520px; padding: 20px; }
+.case-stamp{
+  display:inline-block; border:2px solid var(--red); color: var(--red-bright);
+  font-family: var(--font-mono); letter-spacing:4px; padding:4px 18px; border-radius:4px;
+  transform: rotate(-4deg); margin-bottom:22px; font-size:13px;
+}
+.game-title{ font-size: 58px; font-weight:900; letter-spacing:2px; margin-bottom:10px; }
+.game-title span{ color: var(--brass-bright); }
+.game-subtitle{ color: var(--text-1); margin-bottom:38px; font-size:15px; }
+.start-actions{ display:flex; flex-direction:column; gap:12px; align-items:stretch; max-width:280px; margin:0 auto; }
+.start-hint{ margin-top:18px; font-size:12px; color: var(--text-2); font-family: var(--font-mono); }
+
+/* ---------------- شاشة مقدمة القضية ---------------- */
+#screen-caseintro{ display:flex; align-items:center; justify-content:center; }
+.intro-wrap{
+  max-width:640px; margin: 40px 20px; background: var(--bg-card);
+  border:1px solid var(--line); border-radius: var(--radius); padding: 34px;
+  box-shadow: var(--shadow);
+}
+.file-tab{
+  display:inline-block; background: var(--brass); color:#1a1a14; font-family: var(--font-mono);
+  font-size:12px; padding:4px 12px; border-radius:4px; margin-bottom:16px; font-weight:600;
+}
+.intro-text{ line-height:2; color: var(--text-1); margin: 16px 0 24px; font-size:15px; }
+.intro-victim{
+  background: var(--bg-2); border-right:3px solid var(--red); padding: 14px 18px;
+  border-radius:6px; margin-bottom:26px; font-size:14px; color: var(--text-1); line-height:1.9;
+}
+.intro-victim b{ color: var(--text-0); }
+
+/* ---------------- الشريط العلوي ---------------- */
+.topbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 14px 26px; background: var(--bg-1); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:20;
+}
+.topbar-left{ display:flex; align-items:center; gap:14px; }
+.brand{ font-family: var(--font-display); font-weight:800; font-size:18px; color: var(--brass-bright); }
+.case-id{ font-family: var(--font-mono); font-size:12px; color: var(--text-2); border:1px solid var(--line); padding:2px 8px; border-radius:4px; }
+.topbar-stats{ display:flex; gap:18px; font-family: var(--font-mono); font-size:12px; color: var(--text-1); flex-wrap:wrap; justify-content:flex-end;}
+.topbar-stats span b{ color: var(--brass-bright); font-weight:600; }
+
+/* ---------------- التبويبات ---------------- */
+.tabbar{
+  display:flex; gap:4px; padding: 10px 20px; background: var(--bg-0);
+  border-bottom:1px solid var(--line); overflow-x:auto; position:sticky; top:57px; z-index:19;
+}
+.tab-btn{
+  background:transparent; border:1px solid transparent; color: var(--text-2);
+  padding:9px 16px; border-radius:8px; font-size:13px; white-space:nowrap; font-weight:600;
+  transition:.15s;
+}
+.tab-btn:hover{ color: var(--text-0); background: var(--bg-2); }
+.tab-btn.active{ color: var(--bg-0); background: var(--brass); }
+.tab-btn.tab-accuse{ margin-right:auto; color: var(--red-bright); border-color: var(--red); }
+.tab-btn.tab-accuse.active{ background: var(--red); color:#fff; }
+
+.tab-content{ padding: 26px; max-width:1180px; margin:0 auto; min-height:60vh; }
+
+/* ---------------- بطاقات عامة ---------------- */
+.card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:20px; box-shadow: var(--shadow);
+}
+.section-title{ font-size:20px; font-weight:800; margin-bottom:4px; color: var(--text-0); }
+.section-sub{ color: var(--text-2); font-size:13px; margin-bottom:20px; }
+
+/* ---------------- المكتب (Hub) ---------------- */
+.hub-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:16px; margin-top:20px;}
+.hub-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:18px; cursor:pointer; transition:.18s; position:relative; overflow:hidden;
+}
+.hub-card:hover{ border-color: var(--brass); transform: translateY(-3px); box-shadow: var(--shadow); }
+.hub-card .hc-icon{ font-size:26px; margin-bottom:10px; display:block;}
+.hub-card h4{ font-size:15px; margin-bottom:6px;}
+.hub-card p{ font-size:12px; color: var(--text-2); margin:0; line-height:1.7;}
+.hub-badge{
+  position:absolute; top:12px; left:12px; background: var(--olive); color:#eef4ea;
+  font-family: var(--font-mono); font-size:11px; padding:2px 8px; border-radius:20px;
+}
+
+.victim-card{
+  display:flex; gap:16px; align-items:center; background: var(--bg-2); border:1px solid var(--line);
+  border-radius: var(--radius); padding:18px; margin-bottom:22px;
+}
+.victim-avatar{ font-size:40px; background: var(--bg-card); border-radius:50%; width:70px; height:70px; display:flex; align-items:center; justify-content:center; border:2px solid var(--red); flex-shrink:0;}
+.victim-card h4{ margin-bottom:4px; }
+.victim-card p{ color: var(--text-2); font-size:13px; margin:2px 0; }
+
+/* ---------------- مسرح الجريمة / المواقع ---------------- */
+.scene-picker{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.scene-picker button{
+  background: var(--bg-2); border:1px solid var(--line); color: var(--text-1);
+  padding:8px 16px; border-radius:20px; font-size:13px;
+}
+.scene-picker button.active{ background: var(--olive); color:#fff; border-color: var(--olive); }
+
+.scene-stage{
+  position:relative; width:100%; aspect-ratio: 16/9; background:
+    linear-gradient(160deg, #232921 0%, #171b17 70%);
+  border:1px solid var(--line); border-radius: var(--radius); overflow:hidden;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 60px);
+}
+.scene-stage::before{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(circle at 50% 20%, rgba(201,178,122,0.08), transparent 60%);
+}
+.hotspot{
+  position:absolute; transform: translate(50%,50%);
+  width:44px; height:44px; border-radius:50%;
+  background: rgba(201,178,122,0.14); border:2px solid var(--brass);
+  display:flex; align-items:center; justify-content:center; font-size:19px;
+  animation: pulse 2.2s infinite; transition:.15s;
+}
+.hotspot:hover{ background: rgba(201,178,122,0.3); transform: translate(50%,50%) scale(1.1); }
+.hotspot.found{ border-color: var(--olive); background: rgba(107,142,99,0.16); animation:none; }
+@keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,178,122,0.35);} 50%{ box-shadow:0 0 0 8px rgba(201,178,122,0);} }
+.hotspot-label{
+  position:absolute; bottom:-24px; right:50%; transform: translateX(50%);
+  font-size:10px; white-space:nowrap; color: var(--text-2); font-family: var(--font-mono);
+}
+
+/* ---------------- لوحة الأدلة (Evidence Board) ---------------- */
+.board-toolbar{ display:flex; gap:10px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+.board-stage{
+  position:relative; min-height:520px; background: var(--bg-1);
+  border:1px dashed var(--line-strong); border-radius: var(--radius); overflow:hidden;
+  background-image: radial-gradient(rgba(201,178,122,0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.board-svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.evidence-card{
+  position:absolute; width:150px; background: var(--bg-card); border:1px solid var(--line-strong);
+  border-radius:8px; padding:10px; cursor:grab; box-shadow: var(--shadow); user-select:none;
+  transition: box-shadow .15s;
+}
+.evidence-card:active{ cursor:grabbing; }
+.evidence-card.linking{ border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright); }
+.evidence-card .ec-icon{ font-size:20px; }
+.evidence-card .ec-name{ font-size:12px; font-weight:700; margin-top:4px; line-height:1.4; }
+.evidence-card .ec-imp{ font-size:9px; color: var(--text-2); font-family: var(--font-mono); margin-top:4px;}
+.evidence-card .ec-pin{
+  position:absolute; top:-8px; right:12px; width:14px; height:14px; border-radius:50%;
+  background: var(--red-bright); box-shadow:0 2px 4px rgba(0,0,0,0.4);
+}
+.link-btn{ font-size:10px; background: var(--bg-2); border:1px solid var(--line); border-radius:4px; padding:2px 6px; margin-top:6px; color: var(--text-1); }
+
+/* ---------------- المشتبه بهم ---------------- */
+.suspects-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
+.suspect-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:18px; cursor:pointer; transition:.18s; text-align:center;
+}
+.suspect-card:hover{ border-color: var(--brass); transform: translateY(-3px);}
+.suspect-avatar{ font-size:38px; width:66px; height:66px; margin:0 auto 10px; background: var(--bg-2); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--line-strong); }
+.suspect-card h4{ font-size:15px; margin-bottom:4px; }
+.suspect-card .s-job{ font-size:12px; color: var(--text-2); margin-bottom:10px; }
+.trust-bar{ height:6px; background: var(--bg-2); border-radius:4px; overflow:hidden; margin-bottom:6px; }
+.trust-bar-fill{ height:100%; background: linear-gradient(90deg, var(--red), var(--brass)); transition: width .3s; }
+.s-status{ font-size:10px; color: var(--text-2); font-family: var(--font-mono); }
+
+/* ---------------- الاستجواب ---------------- */
+.interrogation-wrap{ display:grid; grid-template-columns: 260px 1fr; gap:20px; }
+@media (max-width:800px){ .interrogation-wrap{ grid-template-columns:1fr; } }
+.suspect-profile{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:18px; text-align:center; height:fit-content; }
+.suspect-profile .suspect-avatar{ width:80px; height:80px; font-size:44px; }
+.profile-row{ display:flex; justify-content:space-between; font-size:12px; color: var(--text-1); padding:6px 0; border-bottom:1px solid var(--line); text-align:right;}
+.profile-row b{ color: var(--text-0); }
+
+.dialogue-box{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:20px; min-height:420px; display:flex; flex-direction:column; }
+.dialogue-log{ flex:1; overflow-y:auto; max-height:340px; margin-bottom:16px; padding-left:6px;}
+.msg{ margin-bottom:14px; max-width:88%; padding:10px 14px; border-radius:10px; font-size:14px; line-height:1.8; }
+.msg-detective{ background: var(--olive-dim); color:#eef4ea; margin-left:auto; border-bottom-left-radius:2px;}
+.msg-suspect{ background: var(--bg-2); border:1px solid var(--line); margin-right:auto; border-bottom-right-radius:2px;}
+.msg-system{ background:transparent; color: var(--text-2); font-family: var(--font-mono); font-size:11px; text-align:center; max-width:100%; }
+.q-options{ display:flex; flex-direction:column; gap:8px; }
+.q-btn{ text-align:right; background: var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:11px 14px; font-size:13px; color: var(--text-1); }
+.q-btn:hover{ border-color: var(--brass); color: var(--text-0); }
+.q-btn:disabled{ opacity:.35; }
+.dialogue-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+.dialogue-tabs button{ flex:1; background: var(--bg-2); border:1px solid var(--line); padding:8px; border-radius:6px; font-size:12px; color: var(--text-2);}
+.dialogue-tabs button.active{ color: var(--brass-bright); border-color: var(--brass); }
+.evidence-picker{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; max-height:220px; overflow-y:auto; }
+.ev-pick-btn{ background: var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:8px; text-align:center; font-size:11px; color: var(--text-1); }
+.ev-pick-btn:hover{ border-color: var(--brass); }
+
+/* ---------------- الخط الزمني ---------------- */
+.timeline-track{ position:relative; margin:30px 0; padding-right:20px; border-right:2px solid var(--line-strong); }
+.timeline-item{ position:relative; padding:0 26px 26px 0; }
+.timeline-item::before{ content:""; position:absolute; right:-7px; top:2px; width:12px; height:12px; border-radius:50%; background: var(--brass); border:2px solid var(--bg-0); }
+.timeline-item .ti-time{ font-family: var(--font-mono); font-size:12px; color: var(--brass-bright); }
+.timeline-item .ti-text{ font-size:14px; margin-top:4px; color: var(--text-1); }
+
+/* ---------------- مساعد التحقيق (AI) ---------------- */
+.ai-wrap{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:20px; max-width:760px; margin:0 auto; }
+.ai-header{ display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+.ai-avatar{ width:46px; height:46px; border-radius:50%; background: linear-gradient(135deg, var(--olive), var(--brass)); display:flex; align-items:center; justify-content:center; font-size:22px;}
+.ai-log{ max-height:420px; overflow-y:auto; margin-bottom:16px; }
+.ai-suggestions{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+.ai-chip{ background: var(--bg-2); border:1px solid var(--line); color: var(--text-1); font-size:12px; padding:7px 14px; border-radius:20px; }
+.ai-chip:hover{ border-color: var(--brass); color: var(--text-0); }
+.ai-input-row{ display:flex; gap:8px; }
+.ai-input-row input{ flex:1; background: var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:11px 14px; color: var(--text-0); font-family:inherit; font-size:13px;}
+.ai-input-row input:focus{ outline:none; border-color: var(--brass); }
+
+/* ---------------- شاشة الاتهام ---------------- */
+.accuse-wrap{ max-width:720px; margin:0 auto; }
+.accuse-suspect-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.accuse-radio{ display:flex; align-items:center; gap:12px; background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; cursor:pointer;}
+.accuse-radio.selected{ border-color: var(--red); background: rgba(180,72,60,0.08); }
+.accuse-evidence-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-bottom:24px;}
+.accuse-ev-item{ background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; cursor:pointer; text-align:center; }
+.accuse-ev-item.selected{ border-color: var(--brass); background: rgba(201,178,122,0.08); }
+
+/* ---------------- شاشة النهاية ---------------- */
+#screen-end{ display:flex; align-items:center; justify-content:center; }
+.end-wrap{ max-width:640px; text-align:center; padding: 30px; }
+.end-icon{ font-size:60px; margin-bottom:14px; }
+.end-title{ font-size:30px; font-weight:800; margin-bottom:16px; }
+.end-text{ color: var(--text-1); line-height:2; margin-bottom:26px; }
+.rank-badge{ display:inline-flex; align-items:center; gap:10px; background: var(--bg-card); border:1px solid var(--brass); padding:12px 26px; border-radius:30px; margin-bottom:26px; }
+.end-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:30px; }
+.end-stat{ background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:12px; }
+.end-stat b{ display:block; font-size:20px; color: var(--brass-bright); font-family: var(--font-mono);}
+.end-stat span{ font-size:11px; color: var(--text-2); }
+.end-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+
+/* ---------------- نافذة منبثقة ---------------- */
+.modal-overlay{
+  position:fixed; inset:0; background: rgba(6,7,6,0.78); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(2px);
+}
+.modal-overlay.active{ display:flex; }
+.modal-box{
+  background: var(--bg-card); border:1px solid var(--brass); border-radius: var(--radius);
+  max-width:480px; width:100%; padding:26px; box-shadow: var(--shadow); animation: popIn .25s ease;
+  max-height:85vh; overflow-y:auto;
+}
+@keyframes popIn{ from{ transform: scale(.92); opacity:0;} to{ transform:scale(1); opacity:1;} }
+.modal-box h3{ font-size:18px; margin-bottom:10px; color: var(--brass-bright); }
+.modal-box p{ line-height:1.9; color: var(--text-1); font-size:14px; }
+.modal-close-row{ margin-top:20px; text-align:left; }
+
+/* ---------------- إشعار ---------------- */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform: translateX(-50%) translateY(100px);
+  background: var(--bg-card); border:1px solid var(--brass); color: var(--text-0);
+  padding:12px 24px; border-radius:30px; font-size:13px; z-index:200; opacity:0;
+  transition: all .35s cubic-bezier(.4,0,.2,1); box-shadow: var(--shadow);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+/* ---------------- شريط تمرير ---------------- */
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-track{ background: var(--bg-1); }
+::-webkit-scrollbar-thumb{ background: var(--line-strong); border-radius:4px; }
+
+/* ---------------- استجابة الشاشات الصغيرة ---------------- */
+@media (max-width:640px){
+  .game-title{ font-size:40px; }
+  .tab-content{ padding:16px; }
+  .topbar{ flex-direction:column; align-items:flex-start; gap:8px; }
+  .topbar-stats{ justify-content:flex-start; }
+  .evidence-card{ width:130px; }
+}
