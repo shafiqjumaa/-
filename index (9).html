@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملف مفتوح — لعبة تحقيق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================
+   ملف مفتوح — الأنماط العامة
+   نظام ألوان: خلفية داكنة (فحمي) + أخضر زيتوني + ذهبي نحاسي
+   خط عرض: Cairo (عناوين) / Tajawal (نص) / IBM Plex Mono (بيانات)
+   ========================================================== */
+
+:root{
+  --bg-0: #101310;
+  --bg-1: #171b17;
+  --bg-2: #1e231e;
+  --bg-card: #1b201c;
+  --line: rgba(201, 178, 122, 0.14);
+  --line-strong: rgba(201, 178, 122, 0.32);
+  --text-0: #ece7d9;
+  --text-1: #b9b6a8;
+  --text-2: #82806f;
+  --olive: #6b8e63;
+  --olive-dim: #4d6947;
+  --brass: #c9a15a;
+  --brass-bright: #e0be7c;
+  --red: #b4483c;
+  --red-bright: #d15c4e;
+  --shadow: 0 10px 30px rgba(0,0,0,0.45);
+  --radius: 10px;
+  --font-display: 'Cairo', 'Tajawal', sans-serif;
+  --font-body: 'Tajawal', 'Cairo', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  overflow-x:hidden;
+  position:relative;
+}
+
+::selection{ background: var(--brass); color:#161616; }
+
+/* نسيج ورقي خفيف في الخلفية */
+.paper-texture{
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(201,178,122,0.05), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(107,142,99,0.06), transparent 45%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.008) 0px, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px);
+}
+
+/* زخرفة هندسية عربية بسيطة كخط علوي */
+.geo-divider{
+  height:6px;
+  background: repeating-linear-gradient(135deg, var(--brass) 0 8px, transparent 8px 16px);
+  opacity:0.5;
+}
+
+button{ font-family:inherit; cursor:pointer; }
+h1,h2,h3,h4{ font-family: var(--font-display); margin:0; }
+
+/* ---------------- الأزرار ---------------- */
+.btn{
+  border:1px solid var(--line-strong);
+  background: var(--bg-2);
+  color: var(--text-0);
+  padding: 13px 26px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  transition: all .18s ease;
+  font-family: var(--font-display);
+}
+.btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn:active{ transform: translateY(0); }
+.btn-primary{ background: linear-gradient(135deg, var(--olive), var(--olive-dim)); border-color: var(--olive); color:#f3f1e6; }
+.btn-secondary{ background: var(--bg-card); border-color: var(--brass); color: var(--brass-bright); }
+.btn-ghost{ background:transparent; border-color: var(--line); color: var(--text-2); font-weight:400; }
+.btn-danger{ background: linear-gradient(135deg, var(--red-bright), var(--red)); border-color: var(--red); color:#fff0ec; }
+.btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+.btn-sm{ padding:8px 14px; font-size:13px; }
+
+/* ---------------- الشاشات ---------------- */
+.screen{ display:none; min-height:100vh; position:relative; z-index:1; }
+.screen.active{ display:block; animation: fadeIn .4s ease; }
+@keyframes fadeIn{ from{opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ---------------- شاشة البداية ---------------- */
+#screen-start{ display:flex; align-items:center; justify-content:center; }
+.start-wrap{ text-align:center; max-width:520px; padding: 20px; }
+.case-stamp{
+  display:inline-block; border:2px solid var(--red); color: var(--red-bright);
+  font-family: var(--font-mono); letter-spacing:4px; padding:4px 18px; border-radius:4px;
+  transform: rotate(-4deg); margin-bottom:22px; font-size:13px;
+}
+.game-title{ font-size: 58px; font-weight:900; letter-spacing:2px; margin-bottom:10px; }
+.game-title span{ color: var(--brass-bright); }
+.game-subtitle{ color: var(--text-1); margin-bottom:38px; font-size:15px; }
+.start-actions{ display:flex; flex-direction:column; gap:12px; align-items:stretch; max-width:280px; margin:0 auto; }
+.start-hint{ margin-top:18px; font-size:12px; color: var(--text-2); font-family: var(--font-mono); }
+
+/* ---------------- شاشة مقدمة القضية ---------------- */
+#screen-caseintro{ display:flex; align-items:center; justify-content:center; }
+.intro-wrap{
+  max-width:640px; margin: 40px 20px; background: var(--bg-card);
+  border:1px solid var(--line); border-radius: var(--radius); padding: 34px;
+  box-shadow: var(--shadow);
+}
+.file-tab{
+  display:inline-block; background: var(--brass); color:#1a1a14; font-family: var(--font-mono);
+  font-size:12px; padding:4px 12px; border-radius:4px; margin-bottom:16px; font-weight:600;
+}
+.intro-text{ line-height:2; color: var(--text-1); margin: 16px 0 24px; font-size:15px; }
+.intro-victim{
+  background: var(--bg-2); border-right:3px solid var(--red); padding: 14px 18px;
+  border-radius:6px; margin-bottom:26px; font-size:14px; color: var(--text-1); line-height:1.9;
+}
+.intro-victim b{ color: var(--text-0); }
+
+/* ---------------- الشريط العلوي ---------------- */
+.topbar{
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 14px 26px; background: var(--bg-1); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:20;
+}
+.topbar-left{ display:flex; align-items:center; gap:14px; }
+.brand{ font-family: var(--font-display); font-weight:800; font-size:18px; color: var(--brass-bright); }
+.case-id{ font-family: var(--font-mono); font-size:12px; color: var(--text-2); border:1px solid var(--line); padding:2px 8px; border-radius:4px; }
+.topbar-stats{ display:flex; gap:18px; font-family: var(--font-mono); font-size:12px; color: var(--text-1); flex-wrap:wrap; justify-content:flex-end;}
+.topbar-stats span b{ color: var(--brass-bright); font-weight:600; }
+
+/* ---------------- التبويبات ---------------- */
+.tabbar{
+  display:flex; gap:4px; padding: 10px 20px; background: var(--bg-0);
+  border-bottom:1px solid var(--line); overflow-x:auto; position:sticky; top:57px; z-index:19;
+}
+.tab-btn{
+  background:transparent; border:1px solid transparent; color: var(--text-2);
+  padding:9px 16px; border-radius:8px; font-size:13px; white-space:nowrap; font-weight:600;
+  transition:.15s;
+}
+.tab-btn:hover{ color: var(--text-0); background: var(--bg-2); }
+.tab-btn.active{ color: var(--bg-0); background: var(--brass); }
+.tab-btn.tab-accuse{ margin-right:auto; color: var(--red-bright); border-color: var(--red); }
+.tab-btn.tab-accuse.active{ background: var(--red); color:#fff; }
+
+.tab-content{ padding: 26px; max-width:1180px; margin:0 auto; min-height:60vh; }
+
+/* ---------------- بطاقات عامة ---------------- */
+.card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:20px; box-shadow: var(--shadow);
+}
+.section-title{ font-size:20px; font-weight:800; margin-bottom:4px; color: var(--text-0); }
+.section-sub{ color: var(--text-2); font-size:13px; margin-bottom:20px; }
+
+/* ---------------- المكتب (Hub) ---------------- */
+.hub-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:16px; margin-top:20px;}
+.hub-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:18px; cursor:pointer; transition:.18s; position:relative; overflow:hidden;
+}
+.hub-card:hover{ border-color: var(--brass); transform: translateY(-3px); box-shadow: var(--shadow); }
+.hub-card .hc-icon{ font-size:26px; margin-bottom:10px; display:block;}
+.hub-card h4{ font-size:15px; margin-bottom:6px;}
+.hub-card p{ font-size:12px; color: var(--text-2); margin:0; line-height:1.7;}
+.hub-badge{
+  position:absolute; top:12px; left:12px; background: var(--olive); color:#eef4ea;
+  font-family: var(--font-mono); font-size:11px; padding:2px 8px; border-radius:20px;
+}
+
+.victim-card{
+  display:flex; gap:16px; align-items:center; background: var(--bg-2); border:1px solid var(--line);
+  border-radius: var(--radius); padding:18px; margin-bottom:22px;
+}
+.victim-avatar{ font-size:40px; background: var(--bg-card); border-radius:50%; width:70px; height:70px; display:flex; align-items:center; justify-content:center; border:2px solid var(--red); flex-shrink:0;}
+.victim-card h4{ margin-bottom:4px; }
+.victim-card p{ color: var(--text-2); font-size:13px; margin:2px 0; }
+
+/* ---------------- مسرح الجريمة / المواقع ---------------- */
+.scene-picker{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.scene-picker button{
+  background: var(--bg-2); border:1px solid var(--line); color: var(--text-1);
+  padding:8px 16px; border-radius:20px; font-size:13px;
+}
+.scene-picker button.active{ background: var(--olive); color:#fff; border-color: var(--olive); }
+
+.scene-stage{
+  position:relative; width:100%; aspect-ratio: 16/9; background:
+    linear-gradient(160deg, #232921 0%, #171b17 70%);
+  border:1px solid var(--line); border-radius: var(--radius); overflow:hidden;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 60px);
+}
+.scene-stage::before{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(circle at 50% 20%, rgba(201,178,122,0.08), transparent 60%);
+}
+.hotspot{
+  position:absolute; transform: translate(50%,50%);
+  width:44px; height:44px; border-radius:50%;
+  background: rgba(201,178,122,0.14); border:2px solid var(--brass);
+  display:flex; align-items:center; justify-content:center; font-size:19px;
+  animation: pulse 2.2s infinite; transition:.15s;
+}
+.hotspot:hover{ background: rgba(201,178,122,0.3); transform: translate(50%,50%) scale(1.1); }
+.hotspot.found{ border-color: var(--olive); background: rgba(107,142,99,0.16); animation:none; }
+@keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,178,122,0.35);} 50%{ box-shadow:0 0 0 8px rgba(201,178,122,0);} }
+.hotspot-label{
+  position:absolute; bottom:-24px; right:50%; transform: translateX(50%);
+  font-size:10px; white-space:nowrap; color: var(--text-2); font-family: var(--font-mono);
+}
+
+/* ---------------- لوحة الأدلة (Evidence Board) ---------------- */
+.board-toolbar{ display:flex; gap:10px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+.board-stage{
+  position:relative; min-height:520px; background: var(--bg-1);
+  border:1px dashed var(--line-strong); border-radius: var(--radius); overflow:hidden;
+  background-image: radial-gradient(rgba(201,178,122,0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.board-svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.evidence-card{
+  position:absolute; width:150px; background: var(--bg-card); border:1px solid var(--line-strong);
+  border-radius:8px; padding:10px; cursor:grab; box-shadow: var(--shadow); user-select:none;
+  transition: box-shadow .15s;
+}
+.evidence-card:active{ cursor:grabbing; }
+.evidence-card.linking{ border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright); }
+.evidence-card .ec-icon{ font-size:20px; }
+.evidence-card .ec-name{ font-size:12px; font-weight:700; margin-top:4px; line-height:1.4; }
+.evidence-card .ec-imp{ font-size:9px; color: var(--text-2); font-family: var(--font-mono); margin-top:4px;}
+.evidence-card .ec-pin{
+  position:absolute; top:-8px; right:12px; width:14px; height:14px; border-radius:50%;
+  background: var(--red-bright); box-shadow:0 2px 4px rgba(0,0,0,0.4);
+}
+.link-btn{ font-size:10px; background: var(--bg-2); border:1px solid var(--line); border-radius:4px; padding:2px 6px; margin-top:6px; color: var(--text-1); }
+
+/* ---------------- المشتبه بهم ---------------- */
+.suspects-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
+.suspect-card{
+  background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius);
+  padding:18px; cursor:pointer; transition:.18s; text-align:center;
+}
+.suspect-card:hover{ border-color: var(--brass); transform: translateY(-3px);}
+.suspect-avatar{ font-size:38px; width:66px; height:66px; margin:0 auto 10px; background: var(--bg-2); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--line-strong); }
+.suspect-card h4{ font-size:15px; margin-bottom:4px; }
+.suspect-card .s-job{ font-size:12px; color: var(--text-2); margin-bottom:10px; }
+.trust-bar{ height:6px; background: var(--bg-2); border-radius:4px; overflow:hidden; margin-bottom:6px; }
+.trust-bar-fill{ height:100%; background: linear-gradient(90deg, var(--red), var(--brass)); transition: width .3s; }
+.s-status{ font-size:10px; color: var(--text-2); font-family: var(--font-mono); }
+
+/* ---------------- الاستجواب ---------------- */
+.interrogation-wrap{ display:grid; grid-template-columns: 260px 1fr; gap:20px; }
+@media (max-width:800px){ .interrogation-wrap{ grid-template-columns:1fr; } }
+.suspect-profile{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:18px; text-align:center; height:fit-content; }
+.suspect-profile .suspect-avatar{ width:80px; height:80px; font-size:44px; }
+.profile-row{ display:flex; justify-content:space-between; font-size:12px; color: var(--text-1); padding:6px 0; border-bottom:1px solid var(--line); text-align:right;}
+.profile-row b{ color: var(--text-0); }
+
+.dialogue-box{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:20px; min-height:420px; display:flex; flex-direction:column; }
+.dialogue-log{ flex:1; overflow-y:auto; max-height:340px; margin-bottom:16px; padding-left:6px;}
+.msg{ margin-bottom:14px; max-width:88%; padding:10px 14px; border-radius:10px; font-size:14px; line-height:1.8; }
+.msg-detective{ background: var(--olive-dim); color:#eef4ea; margin-left:auto; border-bottom-left-radius:2px;}
+.msg-suspect{ background: var(--bg-2); border:1px solid var(--line); margin-right:auto; border-bottom-right-radius:2px;}
+.msg-system{ background:transparent; color: var(--text-2); font-family: var(--font-mono); font-size:11px; text-align:center; max-width:100%; }
+.q-options{ display:flex; flex-direction:column; gap:8px; }
+.q-btn{ text-align:right; background: var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:11px 14px; font-size:13px; color: var(--text-1); }
+.q-btn:hover{ border-color: var(--brass); color: var(--text-0); }
+.q-btn:disabled{ opacity:.35; }
+.dialogue-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+.dialogue-tabs button{ flex:1; background: var(--bg-2); border:1px solid var(--line); padding:8px; border-radius:6px; font-size:12px; color: var(--text-2);}
+.dialogue-tabs button.active{ color: var(--brass-bright); border-color: var(--brass); }
+.evidence-picker{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; max-height:220px; overflow-y:auto; }
+.ev-pick-btn{ background: var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:8px; text-align:center; font-size:11px; color: var(--text-1); }
+.ev-pick-btn:hover{ border-color: var(--brass); }
+
+/* ---------------- الخط الزمني ---------------- */
+.timeline-track{ position:relative; margin:30px 0; padding-right:20px; border-right:2px solid var(--line-strong); }
+.timeline-item{ position:relative; padding:0 26px 26px 0; }
+.timeline-item::before{ content:""; position:absolute; right:-7px; top:2px; width:12px; height:12px; border-radius:50%; background: var(--brass); border:2px solid var(--bg-0); }
+.timeline-item .ti-time{ font-family: var(--font-mono); font-size:12px; color: var(--brass-bright); }
+.timeline-item .ti-text{ font-size:14px; margin-top:4px; color: var(--text-1); }
+
+/* ---------------- مساعد التحقيق (AI) ---------------- */
+.ai-wrap{ background: var(--bg-card); border:1px solid var(--line); border-radius: var(--radius); padding:20px; max-width:760px; margin:0 auto; }
+.ai-header{ display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+.ai-avatar{ width:46px; height:46px; border-radius:50%; background: linear-gradient(135deg, var(--olive), var(--brass)); display:flex; align-items:center; justify-content:center; font-size:22px;}
+.ai-log{ max-height:420px; overflow-y:auto; margin-bottom:16px; }
+.ai-suggestions{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+.ai-chip{ background: var(--bg-2); border:1px solid var(--line); color: var(--text-1); font-size:12px; padding:7px 14px; border-radius:20px; }
+.ai-chip:hover{ border-color: var(--brass); color: var(--text-0); }
+.ai-input-row{ display:flex; gap:8px; }
+.ai-input-row input{ flex:1; background: var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:11px 14px; color: var(--text-0); font-family:inherit; font-size:13px;}
+.ai-input-row input:focus{ outline:none; border-color: var(--brass); }
+
+/* ---------------- شاشة الاتهام ---------------- */
+.accuse-wrap{ max-width:720px; margin:0 auto; }
+.accuse-suspect-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.accuse-radio{ display:flex; align-items:center; gap:12px; background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:12px 16px; cursor:pointer;}
+.accuse-radio.selected{ border-color: var(--red); background: rgba(180,72,60,0.08); }
+.accuse-evidence-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-bottom:24px;}
+.accuse-ev-item{ background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; cursor:pointer; text-align:center; }
+.accuse-ev-item.selected{ border-color: var(--brass); background: rgba(201,178,122,0.08); }
+
+/* ---------------- شاشة النهاية ---------------- */
+#screen-end{ display:flex; align-items:center; justify-content:center; }
+.end-wrap{ max-width:640px; text-align:center; padding: 30px; }
+.end-icon{ font-size:60px; margin-bottom:14px; }
+.end-title{ font-size:30px; font-weight:800; margin-bottom:16px; }
+.end-text{ color: var(--text-1); line-height:2; margin-bottom:26px; }
+.rank-badge{ display:inline-flex; align-items:center; gap:10px; background: var(--bg-card); border:1px solid var(--brass); padding:12px 26px; border-radius:30px; margin-bottom:26px; }
+.end-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:30px; }
+.end-stat{ background: var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:12px; }
+.end-stat b{ display:block; font-size:20px; color: var(--brass-bright); font-family: var(--font-mono);}
+.end-stat span{ font-size:11px; color: var(--text-2); }
+.end-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+
+/* ---------------- نافذة منبثقة ---------------- */
+.modal-overlay{
+  position:fixed; inset:0; background: rgba(6,7,6,0.78); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(2px);
+}
+.modal-overlay.active{ display:flex; }
+.modal-box{
+  background: var(--bg-card); border:1px solid var(--brass); border-radius: var(--radius);
+  max-width:480px; width:100%; padding:26px; box-shadow: var(--shadow); animation: popIn .25s ease;
+  max-height:85vh; overflow-y:auto;
+}
+@keyframes popIn{ from{ transform: scale(.92); opacity:0;} to{ transform:scale(1); opacity:1;} }
+.modal-box h3{ font-size:18px; margin-bottom:10px; color: var(--brass-bright); }
+.modal-box p{ line-height:1.9; color: var(--text-1); font-size:14px; }
+.modal-close-row{ margin-top:20px; text-align:left; }
+
+/* ---------------- إشعار ---------------- */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform: translateX(-50%) translateY(100px);
+  background: var(--bg-card); border:1px solid var(--brass); color: var(--text-0);
+  padding:12px 24px; border-radius:30px; font-size:13px; z-index:200; opacity:0;
+  transition: all .35s cubic-bezier(.4,0,.2,1); box-shadow: var(--shadow);
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+/* ---------------- شريط تمرير ---------------- */
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-track{ background: var(--bg-1); }
+::-webkit-scrollbar-thumb{ background: var(--line-strong); border-radius:4px; }
+
+/* ---------------- استجابة الشاشات الصغيرة ---------------- */
+@media (max-width:640px){
+  .game-title{ font-size:40px; }
+  .tab-content{ padding:16px; }
+  .topbar{ flex-direction:column; align-items:flex-start; gap:8px; }
+  .topbar-stats{ justify-content:flex-start; }
+  .evidence-card{ width:130px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- خلفية زخرفية ثابتة -->
+<div class="paper-texture"></div>
+
+<!-- ============ شاشة البداية ============ -->
+<section id="screen-start" class="screen active">
+  <div class="start-wrap">
+    <div class="case-stamp">سرّي</div>
+    <h1 class="game-title">ملف <span>مفتوح</span></h1>
+    <p class="game-subtitle">قسم التحقيقات الجنائية — الجمهورية العربية السورية</p>
+    <div class="start-actions">
+      <button class="btn btn-primary" id="btn-continue">متابعة التحقيق</button>
+      <button class="btn btn-secondary" id="btn-newgame">قضية جديدة</button>
+      <button class="btn btn-ghost" id="btn-reset">مسح التقدّم</button>
+    </div>
+    <p class="start-hint" id="save-hint"></p>
+  </div>
+</section>
+
+<!-- ============ شاشة مقدمة القضية ============ -->
+<section id="screen-caseintro" class="screen">
+  <div class="intro-wrap">
+    <div class="file-tab">ملف رقم 1147 — سري</div>
+    <h2 id="intro-title"></h2>
+    <p id="intro-body" class="intro-text"></p>
+    <div class="intro-victim" id="intro-victim"></div>
+    <button class="btn btn-primary" id="btn-start-investigation">بدء التحقيق</button>
+  </div>
+</section>
+
+<!-- ============ الهيكل الرئيسي للعبة (مكتب التحقيق) ============ -->
+<section id="screen-game" class="screen">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand">ملف مفتوح</span>
+      <span class="case-id">القضية #1147</span>
+    </div>
+    <div class="topbar-stats" id="topbar-stats"></div>
+  </header>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-tab="hub">🗂️ المكتب</button>
+    <button class="tab-btn" data-tab="scene">🏠 مسرح الجريمة</button>
+    <button class="tab-btn" data-tab="locations">📍 مواقع أخرى</button>
+    <button class="tab-btn" data-tab="board">📌 لوحة الأدلة</button>
+    <button class="tab-btn" data-tab="suspects">🕵️ المشتبه بهم</button>
+    <button class="tab-btn" data-tab="timeline">⏱️ الخط الزمني</button>
+    <button class="tab-btn" data-tab="ai">🤖 مساعد التحقيق</button>
+    <button class="tab-btn tab-accuse" data-tab="accuse">⚖️ إغلاق القضية</button>
+  </nav>
+
+  <main class="tab-content" id="tab-content">
+    <!-- المحتوى يُبنى ديناميكياً بواسطة JS -->
+  </main>
+</section>
+
+<!-- ============ شاشة النهاية ============ -->
+<section id="screen-end" class="screen">
+  <div class="end-wrap" id="end-wrap"></div>
+</section>
+
+<!-- ============ نافذة منبثقة عامة ============ -->
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<!-- ============ إشعار عابر ============ -->
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   ملف مفتوح — بيانات القضية رقم 1147
+   كل المحتوى (الشخصيات، الأدلة، الحوارات) معرّف هنا بشكل منظم
+   بحيث يمكن لاحقاً إضافة قضايا جديدة بسهولة بنفس البنية.
+   ============================================================ */
+
+const CASE = {
+  id: "case-1147",
+  title: "سكون شارع الروضة",
+  city: "دمشق — حي أبو رمانة",
+  intro: `في تمام الساعة الثامنة صباحاً، أبلغ حارس أحد الأبنية السكنية في حي أبو رمانة عن عدم استجابة أحد السكان لعدة أيام. عند فتح الشقة، عُثر على "كريم النجّار"، 42 عاماً، تاجر أثاث معروف، جثة هامدة في صالة منزله. بدت الحادثة للوهلة الأولى وكأنها وفاة طبيعية إثر أزمة قلبية، إلا أن الطبيب الشرعي الأولي لاحظ تفاصيل صغيرة لا تتفق مع هذا الاستنتاج. كُلّفتَ أنت، المحقق المسؤول، بفتح هذا الملف والوصول إلى الحقيقة.`,
+  killerId: "s3",
+  // الأدلة المطلوبة لإدانة مقنعة (لا تُعرض للاعب، تُستخدم للتقييم فقط)
+  keyEvidenceForWin: ["ev10", "ev05", "ev04"],
+  minEvidenceToAccuse: 3,
+};
+
+const VICTIM = {
+  name: "كريم النجّار",
+  age: 42,
+  job: "تاجر أثاث — صاحب معرض «دار الأرز»",
+  status: "متوفى — عُثر عليه في صالة شقته الساعة 8:00 صباحاً",
+  details: "معروف في محيطه بالصرامة في العمل. كان يدير شركة عائلية صغيرة مع شقيقه فراس، وله علاقات اجتماعية واسعة. انفصل مؤخراً عن خطيبته ليلى بعد خلاف لم تُعرف تفاصيله بدقة.",
+};
+
+/* ============================================================
+   الأدلـة
+   ============================================================ */
+const EVIDENCE = [
+  {
+    id: "ev01",
+    name: "فنجان قهوة نصف ممتلئ",
+    icon: "☕",
+    location: "loc-scene",
+    importance: 2,
+    desc: "فنجان قهوة تركية على طاولة الصالة، به بقايا مسحوق غير ذائب بالكامل في القاع.",
+    detail: "أظهر الفحص المخبري وجود تركيز غير طبيعي من دواء قلبي (ديجوكسين) داخل الفنجان — كمية أعلى بكثير من أي جرعة علاجية.",
+    related: ["ev02", "ev10"],
+    characters: ["s3"],
+  },
+  {
+    id: "ev02",
+    name: "علبة دواء فارغة",
+    icon: "💊",
+    location: "loc-scene",
+    importance: 2,
+    desc: "علبة دواء فارغة في خزانة الحمام، لا تحمل اسم الضحية على الوصفة.",
+    detail: "الوصفة المرفقة صادرة باسم مريض آخر يعاني من قصور بالقلب. لا صلة طبية للضحية بهذا الدواء إطلاقاً.",
+    related: ["ev01", "ev04"],
+    characters: ["s3"],
+  },
+  {
+    id: "ev03",
+    name: "رسائل هاتفية متبادلة",
+    icon: "💬",
+    location: "loc-scene",
+    importance: 3,
+    desc: "محادثة على هاتف الضحية مع أخيه فراس، آخر رسالة قبل ثلاثة أيام من الوفاة.",
+    detail: "الرسائل تتضمن نقاشاً حاداً حول \"ديون لا بد أن تُسدَّد قبل نهاية الشهر\" وتهديداً من الضحية بـ\"كشف الحسابات أمام الشركاء\".",
+    related: ["ev04", "ev08"],
+    characters: ["s3"],
+  },
+  {
+    id: "ev04",
+    name: "دفتر حسابات الشركة",
+    icon: "📒",
+    location: "loc-office",
+    importance: 3,
+    desc: "دفتر محاسبة من مكتب شركة «دار الأرز»، به تسجيلات مالية للأشهر الستة الأخيرة.",
+    detail: "تحليل الأرقام يكشف عن تحويلات غير موثّقة بقيمة كبيرة من حساب الشركة إلى حساب شخصي يعود لفراس دياب — تلاعب مالي ممنهج.",
+    related: ["ev03", "ev08"],
+    characters: ["s3"],
+  },
+  {
+    id: "ev05",
+    name: "سجل كاميرا مراقبة المدخل",
+    icon: "🎥",
+    location: "loc-entrance",
+    importance: 3,
+    desc: "سجل كاميرا مراقبة بوابة البناء لليلة الحادثة.",
+    detail: "يُظهر السجل دخول شخص يرتدي سترة داكنة الساعة 11:05 مساءً، وخروجه الساعة 11:40 مساءً — ملامح الشخص تتطابق بشكل كبير مع قامة فراس دياب.",
+    related: ["ev09", "ev11"],
+    characters: ["s3"],
+  },
+  {
+    id: "ev06",
+    name: "إفادة الجار سامر",
+    icon: "🗣️",
+    location: "loc-scene",
+    importance: 1,
+    desc: "الجار المجاور مباشرة للشقة استمع لصوت جدال قصير قرابة منتصف الليل.",
+    detail: "يذكر سامر أنه سمع صوتين، أحدهما يشبه صوت كريم، والآخر أخفض ولم يستطع تمييزه بدقة، تبعه صمت تام.",
+    related: ["ev05"],
+    characters: ["s1"],
+  },
+  {
+    id: "ev07",
+    name: "رسالة ممزقة في سلة المهملات",
+    icon: "✉️",
+    location: "loc-scene",
+    importance: 1,
+    desc: "أجزاء من رسالة ممزقة عُثر عليها في سلة مهملات المطبخ.",
+    detail: "بعد إعادة تركيب القصاصات، تبيّن أنها رسالة من ليلى مراد تتحدث عن \"خيانة ثقة\" و\"عدم رغبتها برؤيته مجدداً\" — مؤرخة قبل أسبوعين من الحادثة.",
+    related: ["ev12"],
+    characters: ["s4"],
+  },
+  {
+    id: "ev08",
+    name: "عقد شراكة الشركة",
+    icon: "📄",
+    location: "loc-office",
+    importance: 2,
+    desc: "نسخة من عقد تأسيس شركة «دار الأرز» بين كريم وشريكته رنا وأخيه فراس.",
+    detail: "يوضّح العقد أن كريم يملك 60% من الشركة، وله حق النقض على أي قرار مالي — ما يعني أن أي تلاعب بالحسابات لا يمكن تمريره دون علمه.",
+    related: ["ev04"],
+    characters: ["s2", "s3"],
+  },
+  {
+    id: "ev09",
+    name: "إفادة حارس البناء",
+    icon: "🧍",
+    location: "loc-entrance",
+    importance: 2,
+    desc: "حارس البناء نبيل شحادة يتذكر سيارة متوقفة قرب المدخل ليلة الحادثة.",
+    detail: "يصف نبيل السيارة بأنها \"سوداء، من نوع يشبه سيارة أخ الضحية\"، وأنها بقيت متوقفة قرابة نصف ساعة قبل أن تغادر بسرعة.",
+    related: ["ev05"],
+    characters: ["s5", "s3"],
+  },
+  {
+    id: "ev10",
+    name: "بصمات على الفنجان",
+    icon: "🔍",
+    location: "loc-lab",
+    importance: 3,
+    desc: "نتيجة رفع البصمات من فنجان القهوة، وردت من المختبر الجنائي.",
+    detail: "البصمات المرفوعة من مقبض الفنجان تُطابق بصمات فراس دياب المسجّلة سابقاً — دليل مادي مباشر على وجوده قرب الفنجان الذي احتوى الجرعة الزائدة.",
+    related: ["ev01", "ev02"],
+    characters: ["s3"],
+    hiddenUntil: ["ev01"],
+  },
+  {
+    id: "ev11",
+    name: "ساعة يد متوقفة",
+    icon: "⌚",
+    location: "loc-scene",
+    importance: 1,
+    desc: "ساعة يد الضحية، توقفت عقاربها عند الساعة 11:47.",
+    detail: "التوقيت يتطابق تقريباً مع لحظة مغادرة الشخص الذي ظهر في كاميرا المراقبة، ما يشير إلى أن الوفاة حدثت خلال تلك النافذة الزمنية.",
+    related: ["ev05"],
+    characters: [],
+  },
+  {
+    id: "ev12",
+    name: "تقرير الطبيب الشرعي النهائي",
+    icon: "🧪",
+    location: "loc-lab",
+    importance: 3,
+    desc: "التقرير الكامل الذي يحدد سبب الوفاة بدقة.",
+    detail: "يؤكد التقرير أن الوفاة نتجت عن جرعة زائدة متعمّدة من دواء قلبي أُضيفت إلى مشروب الضحية قبل وفاته بساعة تقريباً، وينفي أي علاقة للرسالة الغرامية الممزقة بسبب الوفاة المباشر.",
+    related: ["ev01", "ev02"],
+    characters: [],
+    hiddenUntil: ["ev01", "ev02"],
+  },
+];
+
+/* ============================================================
+   المواقع ونقاط الاهتمام القابلة للنقر
+   ============================================================ */
+const LOCATIONS = {
+  "loc-scene": {
+    name: "شقة الضحية — شارع الروضة",
+    desc: "الصالة كما تُركت ليلة الحادثة. افحص كل عنصر بعناية.",
+    hotspots: [
+      { x: 22, y: 62, icon: "☕", label: "طاولة القهوة", evidence: "ev01" },
+      { x: 72, y: 30, icon: "🚪", label: "خزانة الحمام", evidence: "ev02" },
+      { x: 45, y: 20, icon: "📱", label: "الهاتف المحمول", evidence: "ev03" },
+      { x: 85, y: 70, icon: "🗑️", label: "سلة المهملات", evidence: "ev07" },
+      { x: 12, y: 25, icon: "🧑", label: "الجار في الرواق", evidence: "ev06" },
+      { x: 58, y: 78, icon: "⌚", label: "ساعة اليد", evidence: "ev11" },
+    ],
+  },
+  "loc-office": {
+    name: "مكتب شركة «دار الأرز»",
+    desc: "المكتب الإداري للشركة العائلية التي كان يديرها كريم مع شريكته وأخيه.",
+    hotspots: [
+      { x: 30, y: 50, icon: "📒", label: "دُرج الحسابات", evidence: "ev04" },
+      { x: 70, y: 40, icon: "📄", label: "خزانة الملفات", evidence: "ev08" },
+    ],
+  },
+  "loc-entrance": {
+    name: "مدخل البناء السكني",
+    desc: "المدخل الرئيسي للمبنى حيث توجد كاميرا المراقبة وغرفة الحارس.",
+    hotspots: [
+      { x: 50, y: 35, icon: "🎥", label: "شاشة المراقبة", evidence: "ev05" },
+      { x: 20, y: 65, icon: "🧍", label: "غرفة الحارس", evidence: "ev09" },
+    ],
+  },
+  "loc-lab": {
+    name: "المختبر الجنائي",
+    desc: "نتائج الفحوصات المخبرية الواردة من المختبر الجنائي المركزي.",
+    hotspots: [
+      { x: 35, y: 45, icon: "🔍", label: "تقرير البصمات", evidence: "ev10" },
+      { x: 65, y: 55, icon: "🧪", label: "تقرير الطبيب الشرعي", evidence: "ev12" },
+    ],
+  },
+};
+
+/* ============================================================
+   المشتبه بهم
+   ============================================================ */
+const SUSPECTS = [
+  {
+    id: "s1",
+    name: "سامر الحلبي",
+    age: 47,
+    job: "محامٍ — جار الضحية",
+    relation: "جار الضحية في نفس الطابق منذ خمس سنوات",
+    psych: "هادئ الطباع، يحرص على الدقة في كل ما يقوله بحكم مهنته",
+    motive: "لا دافع مباشر ظاهر، لكنه كان يعرف تفاصيل خاصة عن خلافات الضحية المالية",
+    avatar: "⚖️",
+    trustStart: 60,
+    isKiller: false,
+    statements: [
+      { id: "st1a", text: "لم أرَ أحداً يدخل أو يخرج تلك الليلة، كنت نائماً باكراً.", contradictsWith: "ev06" },
+    ],
+    questions: [
+      {
+        q: "أين كنت ليلة الحادثة؟",
+        a: "كنت في شقتي طوال الليل، أعمل على قضية عاجلة حتى وقت متأخر.",
+        trust: 0,
+      },
+      {
+        q: "هل سمعت أي شيء غير معتاد؟",
+        a: "في الواقع نعم... سمعت صوت جدال خافت قرابة منتصف الليل، لم أُعِر الأمر اهتماماً كبيراً وقتها.",
+        trust: 5,
+        unlock: "ev06",
+      },
+      {
+        q: "كيف كانت علاقتك بكريم؟",
+        a: "علاقة جوار طبيعية، كان يستشيرني أحياناً في أمور قانونية بسيطة تخص الشركة.",
+        trust: 0,
+      },
+      {
+        q: "هل تعرف شيئاً عن مشاكل كريم المالية مع شقيقه؟",
+        a: "سمعت تلميحات فقط، شجارات متكررة حول \"حصة\" أو \"دَين\"، لم أدخل في التفاصيل، هذا شأن عائلي.",
+        trust: 5,
+      },
+    ],
+    confront: {
+      ev05: { text: "معقول؟ لم أنتبه لسيارات أو أشخاص، لكن كلامي عن الأصوات يتوافق مع ما تصفه أنت.", trust: 5 },
+      ev06: { text: "نعم، هذا بالضبط ما أخبرتك به.", trust: 0 },
+      default: { text: "لا أملك معلومة إضافية حول هذا الدليل تحديداً.", trust: -2 },
+    },
+  },
+  {
+    id: "s2",
+    name: "رنا قباني",
+    age: 39,
+    job: "شريكة العمل — شركة «دار الأرز»",
+    relation: "شريكة كريم في الشركة منذ ثماني سنوات",
+    psych: "حازمة، تتحدث بثقة عالية، تُظهر توتراً خفيفاً عند الحديث عن المال",
+    motive: "خلاف مالي متكرر مع الضحية حول توزيع الأرباح وقرارات التوسع",
+    avatar: "💼",
+    trustStart: 50,
+    isKiller: false,
+    statements: [
+      { id: "st2a", text: "الحسابات المالية للشركة كانت شفافة تماماً، لا مشاكل هناك.", contradictsWith: "ev04" },
+    ],
+    questions: [
+      {
+        q: "كيف كانت علاقتك المهنية بكريم؟",
+        a: "علاقة عمل صارمة، كان دقيقاً جداً بخصوص الأرقام، أحياناً أكثر من اللازم.",
+        trust: 0,
+      },
+      {
+        q: "هل كان هناك خلاف مالي بينكما؟",
+        a: "خلافات إدارية عادية حول قرارات التوسع، لا شيء يستدعي كل هذا الاهتمام.",
+        trust: 0,
+      },
+      {
+        q: "هل تعرفين شيئاً عن حسابات الشركة الأخيرة؟",
+        a: "الحسابات المالية للشركة كانت شفافة تماماً، لا مشاكل هناك.",
+        trust: -2,
+      },
+      {
+        q: "أين كنتِ ليلة الحادثة؟",
+        a: "كنت في منزلي مع عائلتي، يمكن لزوجي تأكيد ذلك.",
+        trust: 5,
+      },
+    ],
+    confront: {
+      ev04: { text: "هذا... لم أكن أعلم بهذه التحويلات، إن صحّ ما تقوله فهي ليست من صنيعي بالتأكيد. اسأل فراس عنها.", trust: 8, unlock: null },
+      ev08: { text: "نعم، هذا هو العقد الأصلي، كريم كان يملك القرار الأخير دوماً وفق هذا البند.", trust: 3 },
+      default: { text: "لا علاقة لي بهذا الدليل بشكل مباشر.", trust: -2 },
+    },
+  },
+  {
+    id: "s3",
+    name: "فراس دياب",
+    age: 36,
+    job: "شريك ومدير مالي — شقيق الضحية",
+    relation: "الأخ الأصغر للضحية وشريكه في إدارة الشركة",
+    psych: "متوتر بشكل ملحوظ، يتحاشى النظر المباشر عند الحديث عن الليلة الأخيرة",
+    motive: "ديون شخصية كبيرة، وتلاعب مالي بحسابات الشركة كان كريم على وشك كشفه أمام الشركاء",
+    avatar: "🕴️",
+    trustStart: 55,
+    isKiller: true,
+    statements: [
+      { id: "st3a", text: "لم أزر شقة أخي في تلك الليلة إطلاقاً، كنت في منزلي منذ العاشرة مساءً.", contradictsWith: "ev05" },
+      { id: "st3b", text: "علاقتي بأخي كانت ممتازة، لا خلافات مالية بيننا.", contradictsWith: "ev03" },
+    ],
+    questions: [
+      {
+        q: "أين كنت ليلة الحادثة؟",
+        a: "في منزلي، منذ الساعة العاشرة مساءً تقريباً. لم أخرج بعدها.",
+        trust: 0,
+      },
+      {
+        q: "كيف كانت علاقتك بأخيك مؤخراً؟",
+        a: "علاقتي بأخي كانت ممتازة، لا خلافات مالية بيننا، كنا نعمل معاً بانسجام.",
+        trust: -3,
+      },
+      {
+        q: "هل زرت شقته في الأيام الأخيرة؟",
+        a: "زرته قبل أسبوع تقريباً لشرب القهوة، حديث عائلي عادي لا أكثر.",
+        trust: 0,
+        unlock: "ev-note-visit",
+      },
+      {
+        q: "هل هناك مشاكل مالية في الشركة تخصك؟",
+        a: "لا شيء يستحق الذكر، أرقام الشركة تحت السيطرة تماماً.",
+        trust: -3,
+      },
+    ],
+    confront: {
+      ev03: { text: "هذه... رسائل خاصة أُخذت خارج سياقها. نعم كان بيننا نقاش حاد، لكن هذا لا يعني أي شيء!", trust: 10 },
+      ev04: { text: "أنا... كنت سأعيد هذا المبلغ قريباً، كانت مجرد سلفة مؤقتة، لم يكن كريم ليتفهم الأمر أبداً.", trust: 15 },
+      ev05: { text: "لا بد أن هناك خطأ في التوقيت المسجل على الكاميرا، ربما شخص آخر يشبهني.", trust: 12 },
+      ev09: { text: "سيارتي؟ ربما مررتُ من الشارع بالصدفة فقط، لا علاقة لذلك بما حدث.", trust: 10 },
+      ev10: { text: "بصماتي... بالطبع بصماتي موجودة، أنا زرته، شربتُ القهوة معه ذلك المساء! لكنني... لم أفعل شيئاً بعدها، أقسم لك!", trust: 20 },
+      ev11: { text: "لا أعرف شيئاً عن الساعة، لماذا تسألني عن هذا التحديد؟", trust: 5 },
+      default: { text: "لا أفهم علاقة هذا بي.", trust: -2 },
+    },
+  },
+  {
+    id: "s4",
+    name: "ليلى مراد",
+    age: 33,
+    job: "مصممة داخلية",
+    relation: "خطيبة الضحية سابقاً، انفصلا قبل ثلاثة أسابيع",
+    psych: "حزينة وغاضبة في آن واحد، لا تخفي مرارتها من الانفصال",
+    motive: "انفصال مؤلم بعد اتهامها بخيانة الثقة، ما زالت تحمل غضباً تجاه الضحية",
+    avatar: "🎨",
+    trustStart: 45,
+    isKiller: false,
+    statements: [
+      { id: "st4a", text: "لم أتحدث مع كريم منذ الانفصال، قطعنا كل تواصل.", contradictsWith: "ev07" },
+    ],
+    questions: [
+      {
+        q: "لماذا انفصلتما؟",
+        a: "اتهمني بأشياء لم أفعلها، ولم يمنحني فرصة للتوضيح. كان قاسياً في تلك اللحظة.",
+        trust: 5,
+      },
+      {
+        q: "هل تواصلتِ معه بعد الانفصال؟",
+        a: "لم أتحدث مع كريم منذ الانفصال، قطعنا كل تواصل.",
+        trust: -2,
+      },
+      {
+        q: "أين كنتِ ليلة الحادثة؟",
+        a: "في الاستوديو الخاص بي، أعمل على مشروع تصميم متأخر، وحدي.",
+        trust: 3,
+      },
+      {
+        q: "هل كنتِ غاضبة منه؟",
+        a: "بالطبع كنت غاضبة، لكن الغضب لا يعني أنني أتمنى له الأذى.",
+        trust: 5,
+      },
+    ],
+    confront: {
+      ev07: { text: "حسناً... نعم، كتبت له تلك الرسالة قبل أن أمزّقها وأرميها، كانت آخر مرة أُفرغ فيها غضبي على الورق، لم أرسلها له إطلاقاً ولم ألتقِ به بعدها.", trust: 10 },
+      default: { text: "لا علم لي بهذا الدليل.", trust: -2 },
+    },
+  },
+  {
+    id: "s5",
+    name: "نبيل شحادة (أبو معن)",
+    age: 58,
+    job: "حارس البناء",
+    relation: "حارس المبنى منذ عشر سنوات",
+    psych: "متعاون لكنه متردد أحياناً، يخشى التورط في مشاكل السكان",
+    motive: "لا دافع مباشر، لكنه شاهد على تفاصيل مهمة قد يتردد في كشفها بالكامل",
+    avatar: "🧓",
+    trustStart: 65,
+    isKiller: false,
+    statements: [
+      { id: "st5a", text: "لم أنتبه لأي سيارات غريبة تلك الليلة.", contradictsWith: "ev09" },
+    ],
+    questions: [
+      {
+        q: "هل لاحظت شيئاً غير معتاد ليلة الحادثة؟",
+        a: "كان هناك... سيارة متوقفة قرب المدخل لفترة، لم أفكر كثيراً بالأمر في حينه.",
+        trust: 5,
+        unlock: "ev09",
+      },
+      {
+        q: "هل تتذكر شكل السيارة؟",
+        a: "سوداء، من طراز حديث، يشبه كثيراً سيارة السيد فراس شقيق المرحوم.",
+        trust: 8,
+      },
+      {
+        q: "هل تعمل كاميرات المراقبة بشكل جيد؟",
+        a: "نعم، الكاميرا الرئيسية عند المدخل تعمل بشكل ممتاز، يمكنكم مراجعة تسجيلاتها.",
+        trust: 3,
+      },
+      {
+        q: "كيف كانت علاقتك بالضحية؟",
+        a: "رجل محترم، كان دائماً يسأل عن أحوالي وأحوال عائلتي.",
+        trust: 0,
+      },
+    ],
+    confront: {
+      ev05: { text: "نعم، هذا يتطابق تماماً مع ما رأيته من نافذة الحراسة.", trust: 5 },
+      ev09: { text: "بالضبط، هذا ما أخبرتك به سابقاً.", trust: 0 },
+      default: { text: "لا أملك معلومة إضافية عن هذا.", trust: -2 },
+    },
+  },
+];
+
+/* ============================================================
+   نهايات اللعبة — نصوص السرد النهائي
+   ============================================================ */
+const ENDINGS = {
+  correct: {
+    title: "القضية أُغلقت بنجاح",
+    icon: "✅",
+    text: (name) => `استند التحقيق إلى أدلة متماسكة: الجرعة الزائدة في فنجان القهوة، البصمات المطابقة، سجل الكاميرا، والتلاعب المالي الموثّق في دفتر الحسابات. واجه فراس دياب الأدلة فانهار واعترف بأنه زار أخاه ليلة الحادثة لإقناعه بعدم كشف تلاعبه المالي، وأضاف الدواء إلى فنجان قهوته في لحظة يأس، ظنّاً منه أن الأمر سيبدو وفاة طبيعية. أُحيل الملف إلى النيابة العامة بتهمة القتل العمد.`,
+  },
+  wrongSuspect: {
+    title: "اتهام خاطئ — القضية ما زالت مفتوحة",
+    icon: "❌",
+    text: (name) => `الأدلة التي قدّمتها لم تكن كافية لإدانة ${name}. غياب رابط مباشر بين هذا الشخص وسبب الوفاة الفعلي جعل الاتهام ينهار أمام المدّعي العام، وأُطلق سراحه لعدم كفاية الأدلة. القاتل الحقيقي ما زال طليقاً.`,
+  },
+  insufficientEvidence: {
+    title: "أدلة غير كافية",
+    icon: "⚠️",
+    text: () => `اتهمتَ الشخص الصحيح، لكن الأدلة التي قدّمتها لدعم الاتهام كانت ضعيفة أو غير مكتملة. رفض المدّعي العام فتح ملف الاتهام رسمياً بانتظار أدلة أقوى. حاول جمع بصمات الفنجان، سجل الكاميرا، ودفتر الحسابات قبل إغلاق القضية مجدداً.`,
+  },
+};
+
+const RANKS = [
+  { min: 90, title: "محقق استثنائي", icon: "🏅" },
+  { min: 70, title: "محقق بارع", icon: "🥇" },
+  { min: 45, title: "محقق جيد", icon: "🥈" },
+  { min: 0, title: "محقق مبتدئ", icon: "🥉" },
+];
+
+/* ============================================================
+   نصوص مساعد التحقيق (AI محلي قائم على القواعد)
+   ============================================================ */
+const AI_HINTS = [
+  "ابدأ بفحص مسرح الجريمة جيداً، كل تفصيل صغير قد يكون مفتاحاً.",
+  "لاحظتُ أن فنجان القهوة يستحق تحليلاً مخبرياً دقيقاً — قد يخبرنا بشيء لم تكشفه العين المجردة.",
+  "دفتر حسابات الشركة قد يفسّر الكثير من التوتر الذي يظهر على أحد الأطراف المقرّبين من الضحية.",
+  "قارن بين إفادة أحد المقرّبين وما تكشفه كاميرا مراقبة المدخل — قد تجد تناقضاً مثيراً للاهتمام.",
+  "من بين كل من قابلتهم، من يملك أقوى دافع مالي واضح؟ فكّر جيداً بمن سيخسر الأكثر لو انكشفت حساباته.",
+];
+
+
+/* ==========================================================
+   ملف مفتوح — منطق اللعبة الرئيسي
+   ========================================================== */
+
+const SAVE_KEY = "malaf_maftuh_save_v1";
+
+let state = null;
+let currentTab = "hub";
+let currentSuspectId = null;
+let currentDialogueMode = "questions"; // questions | confront
+let currentLocation = "loc-scene";
+let boardLinking = null; // evidence id currently being linked from
+let audioCtx = null;
+
+/* ---------------- الحالة الافتراضية ---------------- */
+function freshState() {
+  const trust = {};
+  SUSPECTS.forEach((s) => (trust[s.id] = s.trustStart));
+  return {
+    discovered: [],
+    interrogated: [],
+    asked: {}, // suspectId -> [qIndex]
+    confronted: {}, // suspectId -> [evId]
+    trust,
+    connections: [], // [ [evA, evB], ... ]
+    positions: {}, // evId -> {x,y} on board (percent)
+    hints: 0,
+    mistakes: 0,
+    startTime: Date.now(),
+    accusationDone: false,
+    lastSuspect: null,
+    lastEvidenceSet: [],
+    aiMessages: [],
+    ended: false,
+  };
+}
+
+/* ---------------- الحفظ ---------------- */
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn("تعذر الحفظ", e);
+  }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+function clearState() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+/* ---------------- صوت (Web Audio API) ---------------- */
+function ensureAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      audioCtx = null;
+    }
+  }
+}
+function playSound(type) {
+  ensureAudio();
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  let freq = 440,
+    dur = 0.1,
+    wave = "sine";
+  if (type === "click") { freq = 520; dur = 0.05; }
+  if (type === "discover") { freq = 660; dur = 0.22; wave = "triangle"; }
+  if (type === "open") { freq = 380; dur = 0.12; }
+  if (type === "connect") { freq = 800; dur = 0.15; wave = "square"; }
+  if (type === "contradiction") { freq = 200; dur = 0.3; wave = "sawtooth"; }
+  if (type === "success") { freq = 700; dur = 0.4; wave = "triangle"; }
+  if (type === "fail") { freq = 160; dur = 0.5; wave = "sawtooth"; }
+  o.type = wave;
+  o.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  o.start(now);
+  o.stop(now + dur + 0.05);
+  if (type === "success") {
+    setTimeout(() => playSound2(880, 0.3), 180);
+  }
+}
+function playSound2(freq, dur) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  o.type = "triangle";
+  o.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  o.start(now); o.stop(now + dur + 0.05);
+}
+
+/* ---------------- أدوات مساعدة ---------------- */
+function getEvidence(id) { return EVIDENCE.find((e) => e.id === id); }
+function getSuspect(id) { return SUSPECTS.find((s) => s.id === id); }
+function isDiscovered(id) { return state.discovered.includes(id); }
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function showModal(html) {
+  document.getElementById("modal-box").innerHTML = html;
+  document.getElementById("modal-overlay").classList.add("active");
+}
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("active");
+}
+document.getElementById("modal-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "modal-overlay") closeModal();
+});
+
+/* ---------------- التنقل بين الشاشات ---------------- */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* ==========================================================
+   شاشة البداية
+   ========================================================== */
+function initStartScreen() {
+  const saved = loadState();
+  const continueBtn = document.getElementById("btn-continue");
+  const hint = document.getElementById("save-hint");
+  if (saved) {
+    continueBtn.disabled = false;
+    const pct = Math.round((saved.discovered.length / EVIDENCE.length) * 100);
+    hint.textContent = `يوجد تحقيق محفوظ — نسبة الاكتمال ${pct}%`;
+  } else {
+    continueBtn.disabled = true;
+    hint.textContent = "لا يوجد تحقيق محفوظ حالياً";
+  }
+
+  continueBtn.onclick = () => {
+    playSound("click");
+    state = loadState() || freshState();
+    enterGame();
+  };
+  document.getElementById("btn-newgame").onclick = () => {
+    playSound("click");
+    if (loadState() && !confirm("لديك تحقيق محفوظ، هل تريد بدء قضية جديدة والكتابة فوقه؟")) return;
+    state = freshState();
+    saveState();
+    showScreen("screen-caseintro");
+    renderCaseIntro();
+  };
+  document.getElementById("btn-reset").onclick = () => {
+    playSound("click");
+    if (confirm("سيتم مسح كل تقدّم اللعبة المحفوظ. متابعة؟")) {
+      clearState();
+      toast("تم مسح التقدّم");
+      initStartScreen();
+    }
+  };
+}
+
+function renderCaseIntro() {
+  document.getElementById("intro-title").textContent = `${CASE.title} — ${CASE.city}`;
+  document.getElementById("intro-body").textContent = CASE.intro;
+  document.getElementById("intro-victim").innerHTML = `
+    <b>الضحية:</b> ${VICTIM.name} (${VICTIM.age} عاماً) — ${VICTIM.job}<br>
+    <b>الحالة:</b> ${VICTIM.status}<br><br>${VICTIM.details}`;
+  document.getElementById("btn-start-investigation").onclick = () => {
+    playSound("open");
+    enterGame();
+  };
+}
+
+function enterGame() {
+  showScreen("screen-game");
+  switchTab("hub");
+}
+
+/* ==========================================================
+   الشريط العلوي والتبويبات
+   ========================================================== */
+function renderTopbarStats() {
+  const pct = Math.round((state.discovered.length / EVIDENCE.length) * 100);
+  const elapsedMin = Math.max(1, Math.round((Date.now() - state.startTime) / 60000));
+  document.getElementById("topbar-stats").innerHTML = `
+    <span>الأدلة: <b>${state.discovered.length}/${EVIDENCE.length}</b></span>
+    <span>الاكتمال: <b>${pct}%</b></span>
+    <span>التلميحات: <b>${state.hints}</b></span>
+    <span>الأخطاء: <b>${state.mistakes}</b></span>
+    <span>الوقت: <b>${elapsedMin} د</b></span>
+  `;
+}
+
+document.getElementById("tabbar").addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab-btn");
+  if (!btn) return;
+  playSound("click");
+  switchTab(btn.dataset.tab);
+});
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  renderTopbarStats();
+  const map = {
+    hub: renderHub,
+    scene: renderSceneTab,
+    locations: renderLocationsTab,
+    board: renderBoard,
+    suspects: renderSuspects,
+    timeline: renderTimeline,
+    ai: renderAI,
+    accuse: renderAccuse,
+  };
+  (map[tab] || renderHub)();
+  saveState();
+}
+
+/* ==========================================================
+   المكتب (Hub)
+   ========================================================== */
+function renderHub() {
+  const c = document.getElementById("tab-content");
+  const pct = Math.round((state.discovered.length / EVIDENCE.length) * 100);
+  c.innerHTML = `
+    <div class="victim-card">
+      <div class="victim-avatar">🕯️</div>
+      <div>
+        <h4>${VICTIM.name} — ${VICTIM.age} عاماً</h4>
+        <p>${VICTIM.job}</p>
+        <p>${VICTIM.status}</p>
+      </div>
+    </div>
+    <div class="section-title">مرحباً أيها المحقق</div>
+    <div class="section-sub">اختر من أين تريد متابعة التحقيق. نسبة اكتمال الملف: ${pct}%</div>
+    <div class="hub-grid">
+      <div class="hub-card" data-tab="scene">
+        <span class="hub-badge">${state.discovered.filter(id=>getEvidence(id).location==='loc-scene').length}/${EVIDENCE.filter(e=>e.location==='loc-scene').length}</span>
+        <span class="hc-icon">🏠</span><h4>مسرح الجريمة</h4><p>افحص شقة الضحية بحثاً عن أدلة مادية.</p>
+      </div>
+      <div class="hub-card" data-tab="locations">
+        <span class="hc-icon">📍</span><h4>مواقع أخرى</h4><p>مكتب الشركة، مدخل البناء، والمختبر الجنائي.</p>
+      </div>
+      <div class="hub-card" data-tab="suspects">
+        <span class="hub-badge">${state.interrogated.length}/${SUSPECTS.length}</span>
+        <span class="hc-icon">🕵️</span><h4>المشتبه بهم</h4><p>استجوب الأشخاص المرتبطين بالضحية.</p>
+      </div>
+      <div class="hub-card" data-tab="board">
+        <span class="hc-icon">📌</span><h4>لوحة الأدلة</h4><p>اربط الأدلة ببعضها لكشف الصورة الكاملة.</p>
+      </div>
+      <div class="hub-card" data-tab="timeline">
+        <span class="hc-icon">⏱️</span><h4>الخط الزمني</h4><p>رتّب أحداث ليلة الجريمة بالتسلسل الصحيح.</p>
+      </div>
+      <div class="hub-card" data-tab="ai">
+        <span class="hc-icon">🤖</span><h4>مساعد التحقيق</h4><p>استشر المساعد الذكي في تحليل القضية.</p>
+      </div>
+    </div>
+  `;
+  c.querySelectorAll(".hub-card").forEach((el) => {
+    el.onclick = () => {
+      playSound("click");
+      switchTab(el.dataset.tab);
+    };
+  });
+}
+
+/* ==========================================================
+   مسرح الجريمة الرئيسي + المواقع الأخرى (نفس المحرك)
+   ========================================================== */
+function renderSceneTab() {
+  currentLocation = "loc-scene";
+  renderLocationStage(document.getElementById("tab-content"), true);
+}
+
+function renderLocationsTab() {
+  const ids = Object.keys(LOCATIONS).filter((id) => id !== "loc-scene");
+  if (!ids.includes(currentLocation)) currentLocation = ids[0];
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `<div class="scene-picker" id="loc-picker"></div><div id="loc-stage-wrap"></div>`;
+  const picker = document.getElementById("loc-picker");
+  ids.forEach((id) => {
+    const btn = document.createElement("button");
+    btn.textContent = LOCATIONS[id].name;
+    btn.className = currentLocation === id ? "active" : "";
+    btn.onclick = () => {
+      playSound("click");
+      currentLocation = id;
+      renderLocationsTab();
+    };
+    picker.appendChild(btn);
+  });
+  renderLocationStage(document.getElementById("loc-stage-wrap"), false);
+}
+
+function renderLocationStage(container, isSceneTab) {
+  const loc = LOCATIONS[currentLocation];
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <div class="section-title">${loc.name}</div>
+    <div class="section-sub">${loc.desc}</div>
+    <div class="scene-stage" id="scene-stage"></div>
+  `;
+  if (isSceneTab) container.innerHTML = "";
+  container.appendChild(wrap);
+  const stage = wrap.querySelector("#scene-stage");
+  loc.hotspots.forEach((h) => {
+    const el = document.createElement("div");
+    const found = isDiscovered(h.evidence);
+    el.className = "hotspot" + (found ? " found" : "");
+    el.style.left = h.x + "%";
+    el.style.top = h.y + "%";
+    el.innerHTML = `${h.icon}<span class="hotspot-label">${h.label}</span>`;
+    el.onclick = () => handleHotspotClick(h.evidence);
+    stage.appendChild(el);
+  });
+}
+
+function handleHotspotClick(evId) {
+  const ev = getEvidence(evId);
+  if (isDiscovered(evId)) {
+    playSound("open");
+    openEvidenceModal(evId);
+    return;
+  }
+  // بوابة الأدلة المشروطة (تحتاج تحليل مخبري لاحق)
+  if (ev.hiddenUntil && !ev.hiddenUntil.every((req) => isDiscovered(req))) {
+    playSound("click");
+    toast("لا يوجد ما يستدعي التحليل حالياً — اجمع أدلة أخرى أولاً.");
+    return;
+  }
+  playSound("discover");
+  state.discovered.push(evId);
+  saveState();
+  toast(`دليل جديد: ${ev.name}`);
+  showModal(`
+    <h3>${ev.icon} ${ev.name}</h3>
+    <p>${ev.desc}</p>
+    <p style="margin-top:10px; color:var(--brass-bright); font-size:13px;">تمت إضافته إلى لوحة الأدلة.</p>
+    <div class="modal-close-row"><button class="btn btn-primary btn-sm" onclick="closeModal(); refreshCurrentTab();">حسناً</button></div>
+  `);
+  if (currentTab === "scene") renderSceneTab();
+  else if (currentTab === "locations") renderLocationsTab();
+}
+
+function refreshCurrentTab() {
+  switchTab(currentTab);
+}
+
+function openEvidenceModal(evId) {
+  const ev = getEvidence(evId);
+  const relatedNames = (ev.related || []).filter(isDiscovered).map((id) => getEvidence(id).name);
+  showModal(`
+    <h3>${ev.icon} ${ev.name}</h3>
+    <p>${ev.desc}</p>
+    <p style="margin-top:10px;"><b style="color:var(--brass-bright)">تحليل تفصيلي:</b><br>${ev.detail}</p>
+    ${relatedNames.length ? `<p style="margin-top:10px; font-size:12px; color:var(--text-2)">مرتبط بـ: ${relatedNames.join("، ")}</p>` : ""}
+    <div class="modal-close-row"><button class="btn btn-ghost btn-sm" onclick="closeModal()">إغلاق</button></div>
+  `);
+}
+
+/* ==========================================================
+   لوحة الأدلة (Evidence Board)
+   ========================================================== */
+function ensurePositions() {
+  const cols = 5;
+  state.discovered.forEach((id, i) => {
+    if (!state.positions[id]) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      state.positions[id] = { x: 8 + col * 18, y: 10 + row * 24 };
+    }
+  });
+}
+
+function renderBoard() {
+  ensurePositions();
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `
+    <div class="section-title">لوحة الأدلة</div>
+    <div class="section-sub">اسحب الأدلة لترتيبها، واضغط «ربط» على بطاقتين متتاليتين لتوصيلهما بخيط استنتاج.</div>
+    <div class="board-toolbar">
+      <button class="btn btn-ghost btn-sm" id="board-clear-links">مسح كل الروابط</button>
+      <span style="font-size:12px; color:var(--text-2); font-family:var(--font-mono)">الروابط: ${state.connections.length}</span>
+    </div>
+    <div class="board-stage" id="board-stage">
+      <svg class="board-svg" id="board-svg"></svg>
+    </div>
+  `;
+  const stage = document.getElementById("board-stage");
+  if (state.discovered.length === 0) {
+    stage.innerHTML += `<p style="padding:40px; color:var(--text-2); text-align:center;">لم تُجمع أي أدلة بعد. توجّه إلى مسرح الجريمة أو المواقع الأخرى.</p>`;
+    return;
+  }
+  state.discovered.forEach((id) => {
+    const ev = getEvidence(id);
+    const pos = state.positions[id];
+    const card = document.createElement("div");
+    card.className = "evidence-card";
+    card.style.left = pos.x + "%";
+    card.style.top = pos.y + "%";
+    card.dataset.id = id;
+    card.innerHTML = `
+      <div class="ec-pin"></div>
+      <div class="ec-icon">${ev.icon}</div>
+      <div class="ec-name">${ev.name}</div>
+      <div class="ec-imp">${"★".repeat(ev.importance)}</div>
+      <button class="link-btn" data-link="${id}">🔗 ربط</button>
+    `;
+    stage.appendChild(card);
+    makeDraggable(card, id);
+  });
+  document.getElementById("board-clear-links").onclick = () => {
+    state.connections = [];
+    saveState();
+    renderBoard();
+  };
+  stage.querySelectorAll("[data-link]").forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      handleLinkClick(btn.dataset.link);
+    };
+  });
+  drawConnections();
+}
+
+function makeDraggable(card, id) {
+  let dragging = false, offX = 0, offY = 0;
+  card.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".link-btn")) return;
+    dragging = true;
+    card.setPointerCapture(e.pointerId);
+    const rect = card.parentElement.getBoundingClientRect();
+    offX = e.clientX - (rect.left + (state.positions[id].x / 100) * rect.width);
+    offY = e.clientY - (rect.top + (state.positions[id].y / 100) * rect.height);
+  });
+  card.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const rect = card.parentElement.getBoundingClientRect();
+    let x = ((e.clientX - offX - rect.left) / rect.width) * 100;
+    let y = ((e.clientY - offY - rect.top) / rect.height) * 100;
+    x = Math.max(0, Math.min(85, x));
+    y = Math.max(0, Math.min(85, y));
+    state.positions[id] = { x, y };
+    card.style.left = x + "%";
+    card.style.top = y + "%";
+    drawConnections();
+  });
+  card.addEventListener("pointerup", () => { dragging = false; saveState(); });
+  card.addEventListener("pointercancel", () => { dragging = false; });
+}
+
+function handleLinkClick(evId) {
+  playSound("click");
+  if (!boardLinking) {
+    boardLinking = evId;
+    document.querySelector(`.evidence-card[data-id="${evId}"]`).classList.add("linking");
+    toast("اختر دليلاً آخر لربطه بهذا الدليل");
+    return;
+  }
+  if (boardLinking === evId) {
+    document.querySelector(`.evidence-card[data-id="${evId}"]`).classList.remove("linking");
+    boardLinking = null;
+    return;
+  }
+  const a = boardLinking, b = evId;
+  boardLinking = null;
+  document.querySelectorAll(".evidence-card.linking").forEach((el) => el.classList.remove("linking"));
+  const exists = state.connections.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  if (exists) { toast("هذا الرابط موجود بالفعل"); return; }
+  state.connections.push([a, b]);
+  saveState();
+  const evA = getEvidence(a), evB = getEvidence(b);
+  const correct = (evA.related || []).includes(b) || (evB.related || []).includes(a);
+  if (correct) {
+    playSound("connect");
+    toast("✅ ربط منطقي! هذا يقوّي الصورة العامة للقضية.");
+  } else {
+    playSound("contradiction");
+    state.mistakes++;
+    toast("⚠️ لا يبدو أن هذين الدليلين مرتبطان مباشرة، لكن لا بأس بالاستكشاف.");
+  }
+  saveState();
+  drawConnections();
+}
+
+function drawConnections() {
+  const svg = document.getElementById("board-svg");
+  if (!svg) return;
+  svg.innerHTML = "";
+  state.connections.forEach(([a, b]) => {
+    const pa = state.positions[a], pb = state.positions[b];
+    if (!pa || !pb) return;
+    const evA = getEvidence(a), evB = getEvidence(b);
+    const correct = (evA.related || []).includes(b) || (evB.related || []).includes(a);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", pa.x + 8 + "%");
+    line.setAttribute("y1", pa.y + 6 + "%");
+    line.setAttribute("x2", pb.x + 8 + "%");
+    line.setAttribute("y2", pb.y + 6 + "%");
+    line.setAttribute("stroke", correct ? "#c9a15a" : "#b4483c");
+    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-dasharray", correct ? "0" : "4,4");
+    svg.appendChild(line);
+  });
+}
+
+/* ==========================================================
+   المشتبه بهم + الاستجواب
+   ========================================================== */
+function renderSuspects() {
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `
+    <div class="section-title">المشتبه بهم</div>
+    <div class="section-sub">اضغط على أي شخص لبدء أو متابعة استجوابه.</div>
+    <div class="suspects-grid" id="suspects-grid"></div>
+  `;
+  const grid = document.getElementById("suspects-grid");
+  SUSPECTS.forEach((s) => {
+    const trust = state.trust[s.id];
+    const el = document.createElement("div");
+    el.className = "suspect-card";
+    el.innerHTML = `
+      <div class="suspect-avatar">${s.avatar}</div>
+      <h4>${s.name}</h4>
+      <div class="s-job">${s.job}</div>
+      <div class="trust-bar"><div class="trust-bar-fill" style="width:${trust}%"></div></div>
+      <div class="s-status">${state.interrogated.includes(s.id) ? "تم استجوابه" : "لم يُستجوَب بعد"}</div>
+    `;
+    el.onclick = () => { playSound("click"); openInterrogation(s.id); };
+    grid.appendChild(el);
+  });
+}
+
+function openInterrogation(suspectId) {
+  currentSuspectId = suspectId;
+  currentDialogueMode = "questions";
+  if (!state.interrogated.includes(suspectId)) state.interrogated.push(suspectId);
+  if (!state.asked[suspectId]) state.asked[suspectId] = [];
+  if (!state.confronted[suspectId]) state.confronted[suspectId] = [];
+  saveState();
+  renderInterrogation();
+}
+
+function renderInterrogation() {
+  const s = getSuspect(currentSuspectId);
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `
+    <button class="btn btn-ghost btn-sm" id="back-to-suspects">→ العودة لقائمة المشتبه بهم</button>
+    <div class="interrogation-wrap" style="margin-top:14px;">
+      <div class="suspect-profile">
+        <div class="suspect-avatar">${s.avatar}</div>
+        <h4 style="margin-top:10px;">${s.name}</h4>
+        <div class="profile-row"><span>العمر</span><b>${s.age}</b></div>
+        <div class="profile-row"><span>المهنة</span><b>${s.job}</b></div>
+        <div class="profile-row"><span>العلاقة</span><b>${s.relation}</b></div>
+        <div class="profile-row"><span>الحالة النفسية</span><b>${s.psych}</b></div>
+        <div class="profile-row"><span>مستوى الثقة</span><b>${state.trust[s.id]}%</b></div>
+      </div>
+      <div class="dialogue-box">
+        <div class="dialogue-tabs">
+          <button data-mode="questions" class="${currentDialogueMode === "questions" ? "active" : ""}">أسئلة عامة</button>
+          <button data-mode="confront" class="${currentDialogueMode === "confront" ? "active" : ""}">مواجهة بدليل</button>
+        </div>
+        <div class="dialogue-log" id="dialogue-log"></div>
+        <div id="dialogue-controls"></div>
+      </div>
+    </div>
+  `;
+  document.getElementById("back-to-suspects").onclick = () => { playSound("click"); switchTab("suspects"); };
+  c.querySelectorAll(".dialogue-tabs button").forEach((b) => {
+    b.onclick = () => { playSound("click"); currentDialogueMode = b.dataset.mode; renderInterrogation(); };
+  });
+  renderDialogueLog();
+  if (currentDialogueMode === "questions") renderQuestionOptions();
+  else renderConfrontOptions();
+}
+
+function renderDialogueLog() {
+  const log = document.getElementById("dialogue-log");
+  const s = getSuspect(currentSuspectId);
+  let html = "";
+  (state.asked[s.id] || []).forEach((qi) => {
+    const q = s.questions[qi];
+    html += `<div class="msg msg-detective">${q.q}</div>`;
+    html += `<div class="msg msg-suspect">${q.a}</div>`;
+  });
+  (state.confronted[s.id] || []).forEach((evId) => {
+    const ev = getEvidence(evId);
+    const reaction = s.confront[evId] || s.confront.default;
+    html += `<div class="msg msg-system">— عرضت دليل: ${ev.name} —</div>`;
+    html += `<div class="msg msg-suspect">${reaction.text}</div>`;
+  });
+  if (!html) html = `<div class="msg msg-system">ابدأ الاستجواب باختيار سؤال أو تقديم دليل.</div>`;
+  log.innerHTML = html;
+  log.scrollTop = log.scrollHeight;
+}
+
+function renderQuestionOptions() {
+  const s = getSuspect(currentSuspectId);
+  const wrap = document.getElementById("dialogue-controls");
+  wrap.innerHTML = `<div class="q-options" id="q-options"></div>`;
+  const opts = document.getElementById("q-options");
+  s.questions.forEach((q, i) => {
+    const asked = (state.asked[s.id] || []).includes(i);
+    const btn = document.createElement("button");
+    btn.className = "q-btn";
+    btn.textContent = q.q;
+    if (asked) btn.disabled = true;
+    btn.onclick = () => {
+      playSound("click");
+      state.asked[s.id].push(i);
+      state.trust[s.id] = Math.max(0, Math.min(100, state.trust[s.id] + q.trust));
+      if (q.unlock && !isDiscovered(q.unlock)) {
+        state.discovered.push(q.unlock);
+        toast(`دليل جديد من الاستجواب: ${getEvidence(q.unlock).name}`);
+        playSound("discover");
+      }
+      saveState();
+      renderInterrogation();
+    };
+    opts.appendChild(btn);
+  });
+}
+
+function renderConfrontOptions() {
+  const wrap = document.getElementById("dialogue-controls");
+  if (state.discovered.length === 0) {
+    wrap.innerHTML = `<p style="color:var(--text-2); font-size:13px;">لا تملك أي أدلة بعد لمواجهته بها.</p>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="evidence-picker" id="ev-picker"></div>`;
+  const picker = document.getElementById("ev-picker");
+  const s = getSuspect(currentSuspectId);
+  state.discovered.forEach((id) => {
+    const ev = getEvidence(id);
+    const used = (state.confronted[s.id] || []).includes(id);
+    const btn = document.createElement("button");
+    btn.className = "ev-pick-btn";
+    btn.innerHTML = `${ev.icon}<br>${ev.name}`;
+    if (used) btn.disabled = true;
+    btn.onclick = () => {
+      playSound("open");
+      state.confronted[s.id].push(id);
+      const reaction = s.confront[id] || s.confront.default;
+      state.trust[s.id] = Math.max(0, Math.min(100, state.trust[s.id] + reaction.trust));
+      if (reaction.trust < 0) state.mistakes++;
+      saveState();
+      renderInterrogation();
+    };
+    picker.appendChild(btn);
+  });
+}
+
+/* ==========================================================
+   الخط الزمني
+   ========================================================== */
+const TIMELINE_EVENTS = [
+  { req: "ev06", time: "~23:00", text: "الجار سامر يسمع صوت جدال خافت في شقة الضحية." },
+  { req: "ev05", time: "23:05", text: "شخص يرتدي سترة داكنة يدخل مبنى الضحية (سجل الكاميرا)." },
+  { req: "ev09", time: "23:00–23:30", text: "سيارة داكنة اللون متوقفة قرب مدخل البناء." },
+  { req: "ev01", time: "~23:15", text: "إعداد فنجان قهوة يحتوي على جرعة زائدة من دواء قلبي." },
+  { req: "ev11", time: "23:47", text: "توقف ساعة يد الضحية — اللحظة التقديرية للوفاة." },
+  { req: "ev05", time: "23:40", text: "الشخص نفسه يغادر المبنى (سجل الكاميرا)." },
+];
+
+function renderTimeline() {
+  const c = document.getElementById("tab-content");
+  const available = TIMELINE_EVENTS.filter((t) => isDiscovered(t.req));
+  c.innerHTML = `
+    <div class="section-title">الخط الزمني لليلة الحادثة</div>
+    <div class="section-sub">يتكوّن الخط الزمني تلقائياً كلما جمعت أدلة جديدة ترتبط بتوقيت محدد.</div>
+    <div class="timeline-track" id="timeline-track"></div>
+  `;
+  const track = document.getElementById("timeline-track");
+  if (available.length === 0) {
+    track.innerHTML = `<p style="color:var(--text-2)">لا توجد أحداث زمنية موثّقة بعد. اجمع المزيد من الأدلة.</p>`;
+    return;
+  }
+  const sorted = [...available].sort((a, b) => (a.time > b.time ? 1 : -1));
+  sorted.forEach((t) => {
+    const item = document.createElement("div");
+    item.className = "timeline-item";
+    item.innerHTML = `<div class="ti-time">${t.time}</div><div class="ti-text">${t.text}</div>`;
+    track.appendChild(item);
+  });
+}
+
+/* ==========================================================
+   مساعد التحقيق (AI محلي قائم على القواعد)
+   ========================================================== */
+function renderAI() {
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `
+    <div class="ai-wrap">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <h4 style="margin-bottom:2px;">مساعد التحقيق</h4>
+          <p style="font-size:12px; color:var(--text-2); margin:0;">تحليل محلي مبني على الأدلة المكتشفة حتى الآن</p>
+        </div>
+      </div>
+      <div class="ai-log" id="ai-log"></div>
+      <div class="ai-suggestions" id="ai-suggestions"></div>
+      <div class="ai-input-row">
+        <input type="text" id="ai-input" placeholder="اسأل عن دليل، شخصية، أو اطلب تلميحاً...">
+        <button class="btn btn-primary btn-sm" id="ai-send">إرسال</button>
+      </div>
+    </div>
+  `;
+  if (state.aiMessages.length === 0) {
+    pushAI("assistant", "مرحباً أيها المحقق. أنا هنا لمساعدتك على تحليل القضية. اسألني عن ملخص الأدلة، التناقضات، أو من يستحق الاستجواب.");
+  }
+  renderAILog();
+  const chips = [
+    ["لخّص الأدلة المكتشفة", "summary"],
+    ["ما هي التناقضات؟", "contradictions"],
+    ["من يستحق الاستجواب؟", "suggest"],
+    ["حلّل الخط الزمني", "timeline"],
+    ["أعطني تلميحاً", "hint"],
+  ];
+  const chipWrap = document.getElementById("ai-suggestions");
+  chips.forEach(([label, key]) => {
+    const b = document.createElement("button");
+    b.className = "ai-chip";
+    b.textContent = label;
+    b.onclick = () => { playSound("click"); handleAIQuery(key); };
+    chipWrap.appendChild(b);
+  });
+  document.getElementById("ai-send").onclick = sendAIFreeText;
+  document.getElementById("ai-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendAIFreeText();
+  });
+}
+
+function sendAIFreeText() {
+  const input = document.getElementById("ai-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  pushAI("user", text);
+  handleAIQuery("freeform", text);
+}
+
+function pushAI(role, text) {
+  state.aiMessages.push({ role, text });
+  saveState();
+}
+
+function renderAILog() {
+  const log = document.getElementById("ai-log");
+  log.innerHTML = state.aiMessages
+    .map((m) => `<div class="msg ${m.role === "user" ? "msg-detective" : "msg-suspect"}">${m.text}</div>`)
+    .join("");
+  log.scrollTop = log.scrollHeight;
+}
+
+function handleAIQuery(key, freeText) {
+  let reply = "";
+  if (key === "summary") {
+    if (state.discovered.length === 0) {
+      reply = "لم تُكتشف أي أدلة بعد. توجّه إلى مسرح الجريمة للبدء.";
+    } else {
+      const items = state.discovered.map((id) => `• ${getEvidence(id).name}`).join("<br>");
+      reply = `لديك حتى الآن ${state.discovered.length} دليلاً من أصل ${EVIDENCE.length}:<br>${items}`;
+    }
+  } else if (key === "contradictions") {
+    const found = [];
+    SUSPECTS.forEach((s) => {
+      if (!state.interrogated.includes(s.id)) return;
+      (s.statements || []).forEach((st) => {
+        if (isDiscovered(st.contradictsWith)) {
+          found.push(`تصريح ${s.name}: "${st.text}" يتعارض مع دليل «${getEvidence(st.contradictsWith).name}».`);
+        }
+      });
+    });
+    reply = found.length
+      ? "رصدتُ التناقضات التالية:<br>" + found.map((f) => "⚠️ " + f).join("<br>")
+      : "لم أرصد تناقضات واضحة بعد. استجوب المزيد من المشتبه بهم واجمع أدلة إضافية.";
+  } else if (key === "suggest") {
+    const notYet = SUSPECTS.filter((s) => !state.interrogated.includes(s.id));
+    const lowTrust = SUSPECTS.filter((s) => state.interrogated.includes(s.id) && state.trust[s.id] >= 65)
+      .sort((a, b) => b.trust - a.trust);
+    if (notYet.length) {
+      reply = `لم تستجوب بعد: ${notYet.map((s) => s.name).join("، ")}. أنصحك بالبدء بهم.`;
+    } else if (lowTrust.length) {
+      reply = `من واجهته بأدلة قوية وارتفع توتره أكثر من غيره: ${lowTrust.slice(0,2).map((s) => s.name).join("، ")}. قد يستحق مزيداً من المواجهة.`;
+    } else {
+      reply = "لقد استجوبت جميع المشتبه بهم. راجع لوحة الأدلة لتحديد من يملك أقوى دافع ومكان تواجد غير مؤكد.";
+    }
+  } else if (key === "timeline") {
+    const avail = TIMELINE_EVENTS.filter((t) => isDiscovered(t.req));
+    reply = avail.length
+      ? `الخط الزمني الحالي يضم ${avail.length} أحداث موثّقة، وتشير جميعها إلى نافذة زمنية بين الساعة 23:00 و23:47 تقريباً — وهي اللحظة الأهم في القضية.`
+      : "لا تتوفر أحداث زمنية كافية بعد. اجمع أدلة من مسرح الجريمة ومدخل البناء.";
+  } else if (key === "hint") {
+    reply = getNextHint();
+  } else if (key === "freeform") {
+    reply = analyzeFreeText(freeText);
+  }
+  pushAI("assistant", reply);
+  renderAILog();
+  saveState();
+}
+
+function getNextHint() {
+  const tier = Math.min(state.hints, AI_HINTS.length - 1);
+  state.hints++;
+  saveState();
+  renderTopbarStats();
+  const strongHint = state.hints >= AI_HINTS.length;
+  if (strongHint && state.discovered.length >= 6) {
+    return "بناءً على كل ما جمعته: الدافع المالي، البصمات، وسجل الكاميرا تشير جميعها إلى نفس الاتجاه. من في القضية يجمع بين مشكلة مالية موثّقة، ووجود مادي مؤكد في مسرح الجريمة؟";
+  }
+  return "💡 " + AI_HINTS[tier];
+}
+
+function analyzeFreeText(text) {
+  const t = text.toLowerCase();
+  // البحث عن أدلة مطابقة بالاسم
+  for (const ev of EVIDENCE) {
+    if (t.includes(ev.name.split(" ")[0]) && isDiscovered(ev.id)) {
+      return `بخصوص «${ev.name}»: ${ev.detail}`;
+    }
+  }
+  // البحث عن أسماء مشتبه بهم
+  for (const s of SUSPECTS) {
+    if (t.includes(s.name.split(" ")[0])) {
+      if (!state.interrogated.includes(s.id)) {
+        return `لم تستجوب ${s.name} بعد. يُفضّل زيارته في قسم «المشتبه بهم».`;
+      }
+      return `${s.name}: مستوى الثقة الحالي معه ${state.trust[s.id]}%. ${s.motive}`;
+    }
+  }
+  if (t.includes("قاتل") || t.includes("من هو") || t.includes("الحل")) {
+    return "لا يمكنني الكشف عن الحل مباشرة، لكن يمكنني مساعدتك بتلميحات تدريجية إن احتجت ذلك.";
+  }
+  return "لم أفهم سؤالك بدقة. جرّب اختيار أحد الاقتراحات أعلاه، أو اسأل عن اسم دليل أو شخصية محددة.";
+}
+
+/* ==========================================================
+   شاشة الاتهام النهائي
+   ========================================================== */
+let accuseSelectedSuspect = null;
+let accuseSelectedEvidence = [];
+
+function renderAccuse() {
+  accuseSelectedSuspect = null;
+  accuseSelectedEvidence = [];
+  const c = document.getElementById("tab-content");
+  c.innerHTML = `
+    <div class="accuse-wrap">
+      <div class="section-title">⚖️ إغلاق القضية</div>
+      <div class="section-sub">اختر الشخص الذي تعتقد أنه القاتل، ثم حدّد الأدلة الداعمة لاتهامك. هذا القرار نهائي.</div>
+      <h4 style="margin:18px 0 10px;">1. اختر المتهم</h4>
+      <div class="accuse-suspect-list" id="accuse-suspects"></div>
+      <h4 style="margin:18px 0 10px;">2. اختر الأدلة الداعمة (3 على الأقل)</h4>
+      <div class="accuse-evidence-list" id="accuse-evidence"></div>
+      <button class="btn btn-danger" id="accuse-submit">تقديم الاتهام وإغلاق القضية</button>
+    </div>
+  `;
+  const sList = document.getElementById("accuse-suspects");
+  SUSPECTS.forEach((s) => {
+    const el = document.createElement("div");
+    el.className = "accuse-radio";
+    el.innerHTML = `<span>${s.avatar}</span><span>${s.name} — ${s.job}</span>`;
+    el.onclick = () => {
+      playSound("click");
+      accuseSelectedSuspect = s.id;
+      document.querySelectorAll(".accuse-radio").forEach((x) => x.classList.remove("selected"));
+      el.classList.add("selected");
+    };
+    sList.appendChild(el);
+  });
+  const eList = document.getElementById("accuse-evidence");
+  if (state.discovered.length === 0) {
+    eList.innerHTML = `<p style="color:var(--text-2); font-size:13px;">لم تجمع أي أدلة بعد.</p>`;
+  }
+  state.discovered.forEach((id) => {
+    const ev = getEvidence(id);
+    const el = document.createElement("div");
+    el.className = "accuse-ev-item";
+    el.innerHTML = `${ev.icon}<br>${ev.name}`;
+    el.onclick = () => {
+      playSound("click");
+      if (accuseSelectedEvidence.includes(id)) {
+        accuseSelectedEvidence = accuseSelectedEvidence.filter((x) => x !== id);
+        el.classList.remove("selected");
+      } else {
+        accuseSelectedEvidence.push(id);
+        el.classList.add("selected");
+      }
+    };
+    eList.appendChild(el);
+  });
+  document.getElementById("accuse-submit").onclick = submitAccusation;
+}
+
+function submitAccusation() {
+  if (!accuseSelectedSuspect) { toast("اختر متهماً أولاً"); return; }
+  if (accuseSelectedEvidence.length < CASE.minEvidenceToAccuse) {
+    toast(`اختر ${CASE.minEvidenceToAccuse} أدلة على الأقل لدعم الاتهام`);
+    return;
+  }
+  if (!confirm("هذا القرار نهائي ولا يمكن التراجع عنه. هل أنت متأكد؟")) return;
+  state.accusationDone = true;
+  state.lastSuspect = accuseSelectedSuspect;
+  state.lastEvidenceSet = [...accuseSelectedEvidence];
+  saveState();
+  evaluateEnding();
+}
+
+function evaluateEnding() {
+  const correctSuspect = accuseSelectedSuspect === CASE.killerId;
+  const keyMatches = CASE.keyEvidenceForWin.filter((id) => accuseSelectedEvidence.includes(id)).length;
+  const enoughEvidence = keyMatches >= 2;
+
+  let outcome;
+  if (correctSuspect && enoughEvidence) outcome = "correct";
+  else if (correctSuspect && !enoughEvidence) outcome = "insufficientEvidence";
+  else outcome = "wrongSuspect";
+
+  // حساب النقاط
+  let score = 60;
+  score += state.discovered.length * 3;
+  score += state.connections.length * 2;
+  score -= state.hints * 5;
+  score -= state.mistakes * 6;
+  if (outcome === "correct") score += 20;
+  if (outcome === "wrongSuspect") score -= 30;
+  score = Math.max(0, Math.min(100, score));
+
+  const rank = RANKS.find((r) => score >= r.min);
+  playSound(outcome === "correct" ? "success" : "fail");
+  renderEndScreen(outcome, score, rank);
+}
+
+function renderEndScreen(outcome, score, rank) {
+  const ending = ENDINGS[outcome];
+  const suspectName = getSuspect(accuseSelectedSuspect).name;
+  const elapsedMin = Math.round((Date.now() - state.startTime) / 60000);
+  showScreen("screen-end");
+  document.getElementById("end-wrap").innerHTML = `
+    <div class="end-icon">${ending.icon}</div>
+    <div class="end-title">${ending.title}</div>
+    <p class="end-text">${ending.text(suspectName)}</p>
+    <div class="rank-badge">${rank.icon} <b>${rank.title}</b></div>
+    <div class="end-stats">
+      <div class="end-stat"><b>${score}</b><span>النقاط</span></div>
+      <div class="end-stat"><b>${state.discovered.length}/${EVIDENCE.length}</b><span>الأدلة</span></div>
+      <div class="end-stat"><b>${elapsedMin} د</b><span>الوقت</span></div>
+    </div>
+    <div class="end-actions">
+      <button class="btn btn-secondary" id="end-review">مراجعة الملف</button>
+      <button class="btn btn-primary" id="end-newgame">قضية جديدة</button>
+    </div>
+  `;
+  document.getElementById("end-review").onclick = () => {
+    showScreen("screen-game");
+    switchTab("board");
+  };
+  document.getElementById("end-newgame").onclick = () => {
+    clearState();
+    state = freshState();
+    saveState();
+    showScreen("screen-caseintro");
+    renderCaseIntro();
+  };
+}
+
+/* ==========================================================
+   تهيئة عامة
+   ========================================================== */
+window.closeModal = closeModal;
+window.refreshCurrentTab = refreshCurrentTab;
+
+document.addEventListener("DOMContentLoaded", () => {
+  initStartScreen();
+});
+
+</script>
+</body>
+</html>
